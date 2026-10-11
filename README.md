@@ -281,7 +281,9 @@ Contributions, bug reports and ideas are welcome. Please open an [issue](https:/
 
 Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, available under the [Open Database Licence (ODbL)](https://opendatacommons.org/licenses/odbl/).
 
-If you publish maps or data made with this plugin, please credit **© OpenStreetMap contributors**. Please also follow the [Overpass API usage guidelines](https://wiki.openstreetmap.org/wiki/Overpass_API#Public_Overpass_API_instances) and avoid sending very large or repeated requests to the public servers.
+If you publish maps or data made with this plugin, please credit **© OpenStreetMap contributors**.
+
+*OSM Data Toolkit is an independent community project. It is not endorsed by or affiliated with the OpenStreetMap Foundation.* Please also follow the [Overpass API usage guidelines](https://wiki.openstreetmap.org/wiki/Overpass_API#Public_Overpass_API_instances) and avoid sending very large or repeated requests to the public servers.
 
 ## Author
 

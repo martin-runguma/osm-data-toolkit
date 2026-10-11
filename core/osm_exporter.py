@@ -823,11 +823,8 @@ def _shapefile_text_value(value):
     """
     if value is None:
         return None
-    try:
-        if value == NULL:
-            return None
-    except Exception:
-        pass
+    if value == NULL:
+        return None
     text = str(value)
     encoded = text.encode("utf-8")
     if len(encoded) > SHAPEFILE_MAX_TEXT_LENGTH:

@@ -413,6 +413,8 @@ HELP_HTML = """
 <p>Data &copy; OpenStreetMap contributors, available under the
 <a href="https://www.openstreetmap.org/copyright">Open Database
 Licence</a>.</p>
+<p><i>This plugin is not endorsed by or affiliated with the
+OpenStreetMap Foundation.</i></p>
 """
 
 
@@ -1263,8 +1265,10 @@ class OSMDataToolkitDialog(QDialog):
 
         try:
             tool.clear()
-        except Exception:
-            pass
+        except RuntimeError:
+            # QGIS already deleted the tool's underlying C++ object,
+            # so there is nothing left to clear.
+            tool = None
 
         self.status_label.setText("AOI drawing cancelled.")
 
