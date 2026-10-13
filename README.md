@@ -5,7 +5,7 @@
 <p align="center">
   <img alt="QGIS 3.28+" src="https://img.shields.io/badge/QGIS-3.28%2B-589632?logo=qgis&logoColor=white">
   <img alt="Qt5 and Qt6" src="https://img.shields.io/badge/Qt-5%20%7C%206-41CD52?logo=qt&logoColor=white">
-  <img alt="Output: GeoPackage and Shapefile" src="https://img.shields.io/badge/output-GeoPackage%20%7C%20Shapefile-1E88E5">
+  <img alt="Output: GeoPackage and Shapefile" src="https://img.shields.io/badge/output-GeoPackage%20%7C%20Shapefile-0A97D9">
   <img alt="Data: OpenStreetMap" src="https://img.shields.io/badge/data-OpenStreetMap-7EBC6F?logo=openstreetmap&logoColor=white">
 </p>
 
@@ -97,7 +97,7 @@ The coordinates (south, west, north, east) are shown in the dialog so you can ch
 
 ### 2. Choose the feature categories
 
-Tick the categories you need. **Select All** and **Clear All** help you start from either end. See [Feature categories](#feature-categories) for exactly what each one contains.
+Tick the categories you need. **Select all** and **Clear all** help you start from either end. See [Feature categories](#feature-categories) for exactly what each one contains.
 
 If you tick **Administrative boundaries**, you can also choose which administrative levels to download, or leave it on all levels.
 
@@ -110,33 +110,35 @@ If you tick **Administrative boundaries**, you can also choose which administrat
 
 ### 4. Download
 
-Click **Download OSM Data**. A small window asks for a **city, country, region and area name**. These are joined into the output file name, for example `Nairobi_Kenya_NairobiCounty_CBD`. Click **Continue to Download** and watch progress in the **Processing Log**.
+Click **Download OSM Data**. A small window asks for a **city, country, region and area name**. These are joined into the output file name, for example `Nairobi_Kenya_NairobiCounty_CBD`. Click **Continue to Download** and watch progress in the **Progress & Log** panel.
 
 ## Screenshots
 
-<!--
-Add your own screenshots to docs/images/ and uncomment the lines below.
-Suggested files (PNG, about 900 px wide):
-
-  docs/images/screenshot-dialog.png   The main plugin window
-  docs/images/screenshot-aoi.png      Drawing an AOI rectangle on the map
-  docs/images/screenshot-log.png      The Processing Log during a download
-  docs/images/screenshot-result.png   The finished layers in QGIS
+### The main window
 
 <p align="center">
-  <img src="docs/images/screenshot-dialog.png" alt="The OSM Data Toolkit window" width="80%">
+  <img src="docs/images/preview-dialog.svg" alt="The OSM Data Toolkit main window: area of interest, feature categories, output settings and processing log" width="80%">
 </p>
+
+Work through the numbered cards from top to bottom: **1** define the area, **2** pick your categories, **3** choose the output, **4** set the processing options. The coordinates of your area are shown under step 1 so you can check them before downloading, and the **Progress & Log** panel at the bottom keeps you informed at every stage.
+
+### Naming your output
 
 <p align="center">
-  <img src="docs/images/screenshot-aoi.png" alt="Drawing an area of interest on the QGIS map" width="80%">
+  <img src="docs/images/preview-naming.svg" alt="The output naming window with a live filename preview and administrative level filter" width="55%">
 </p>
+
+When you click **Download OSM Data**, this window builds the output file name from your city, country, region and area names, with a live preview. If you ticked **Administrative boundaries**, you can also choose which `admin_level` values to download.
+
+### A finished download
 
 <p align="center">
-  <img src="docs/images/screenshot-result.png" alt="OSM layers loaded in QGIS" width="80%">
+  <img src="docs/images/preview-download.svg" alt="The Progress and Log panel after a successful export" width="80%">
 </p>
--->
 
-*Screenshots coming soon.*
+The log reports each stage, from the Overpass response through to the number of features written to each layer, and the finished layers are added to your QGIS project automatically.
+
+<sub>These previews are illustrations of the interface drawn with sample values (area, names and feature counts will differ on your machine).</sub>
 
 ## Feature categories
 
@@ -204,7 +206,7 @@ OSM tag names are case-sensitive but GeoPackage and Shapefile field names are no
 | Column limit | Very high | About 65 KB per record |
 | Best for | Everything, especially large areas | Sharing with software that needs `.shp` |
 
-Large areas contain hundreds of different tags. A Shapefile cannot store that many columns, so the plugin sizes each column to its data and, if a layer still does not fit, leaves out the rarest tag columns and **tells you in the Processing Log**. Use GeoPackage if you need every tag.
+Large areas contain hundreds of different tags. A Shapefile cannot store that many columns, so the plugin sizes each column to its data and, if a layer still does not fit, leaves out the rarest tag columns and **tells you in the log**. Use GeoPackage if you need every tag.
 
 ## Under the hood
 
@@ -241,7 +243,7 @@ If your problem is not listed, please [open an issue](https://github.com/martin-
 
 - Your QGIS version and operating system
 - The output format and approximate size of the area
-- The full error message from the **Processing Log**
+- The full error message from the **Progress & Log** panel
 
 ## Compatibility
 
@@ -261,7 +263,9 @@ OSM_Data_Toolkit/
 ├── metadata.txt             # Plugin metadata
 ├── icon.png
 ├── gui/
-│   └── main_dialog.py       # Main window, naming dialog, help
+│   ├── main_dialog.py       # Main window, naming dialog, help
+│   ├── nhis_theme.py        # Colours, fonts and Qt style sheet
+│   └── resources/           # Icons used by the style sheet (SVG)
 └── core/
     ├── aoi.py               # Area-of-interest helpers
     ├── aoi_map_tool.py      # Draw-rectangle map tool
