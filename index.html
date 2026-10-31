@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769AA">
+  <title>OSM Data Toolkit | OpenStreetMap data for QGIS</title>
+  <meta name="description" content="Download selected OpenStreetMap feature categories into QGIS. Define an area of interest, choose categories and export organised GeoPackage or Shapefile layers.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OSM Data Toolkit | OpenStreetMap data for QGIS">
+  <meta property="og:description" content="Download selected OpenStreetMap feature categories into QGIS. Define an area of interest, choose categories and export organised GeoPackage or Shapefile layers.">
+  <link rel="canonical" href="https://martin-runguma.github.io/osm-data-toolkit/">
+  <link rel="icon" href="../icon.png" data-root-href="icon.png" data-fallback="assets/images/brand-mark.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="page page-overview" data-page="overview">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="OSM Data Toolkit home">
+      <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="38" height="38"></span>
+      <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
+      <div class="nav-links"><a class="nav-link" data-nav="overview" href="index.html" aria-current="page">Overview</a><a class="nav-link" data-nav="features" href="features.html">Features</a><a class="nav-link" data-nav="workflow" href="workflow.html">Workflow</a><a class="nav-link" data-nav="installation" href="installation.html">Installation</a><a class="nav-link" data-nav="documentation" href="documentation.html">Documentation</a></div>
+      <div class="nav-actions"><a class="button button-primary button-small" href="installation.html">Install plugin <span aria-hidden="true">→</span></a></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="hero hero-home">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-rule"></span> OPENSTREETMAP DATA · QGIS PLUGIN</p>
+        <h1>Bring OpenStreetMap data <span>straight into QGIS.</span></h1>
+        <p class="hero-lead">Choose an area, select the feature categories you need, and download organised GIS layers directly into your QGIS project.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="installation.html">Get started <span aria-hidden="true">→</span></a>
+          <a class="button button-secondary" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View on GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="hero-meta" aria-label="Compatibility and output formats">
+          <span><i class="status-dot"></i> QGIS 3.28+</span><span>QGIS 4.x</span><span>GeoPackage · Shapefile</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="visual-frame">
+          <div class="visual-topline"><span class="window-dots"><i></i><i></i><i></i></span><span>OSM DATA TOOLKIT · DATA OVERVIEW</span><span class="visual-status">READY</span></div>
+          <img class="responsive-illustration hero-art" src="../docs/images/banner.svg" data-root-src="docs/images/banner.svg" data-fallback="assets/images/banner-fallback.svg" alt="Illustration of selected OpenStreetMap data organised into GIS layers" width="920" height="560">
+          <div class="visual-caption"><span><strong>11</strong> feature categories</span><span><strong>4</strong> AOI methods</span><span><strong>2</strong> export formats</span></div>
+        </div>
+        <div class="hero-note"><span class="note-mark">OSM</span><span><strong>Open data, ready to work with.</strong><small>Download within your QGIS workflow.</small></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-strip" aria-label="Plugin characteristics"><div class="container trust-items"><span><b>01</b> Choose an area</span><span><b>02</b> Select OSM categories</span><span><b>03</b> Export organised layers</span><span><b>04</b> Continue in QGIS</span></div></section>
+
+  <section class="section section-intro"><div class="container split-heading"><div><p class="eyebrow">A DIRECT ROUTE FROM OSM TO GIS</p><h2>Get the data you need.<br><span>Keep control of the area.</span></h2></div><div class="section-copy"><p>OSM Data Toolkit connects your QGIS project to the Overpass API. Select a map extent or define your own area, choose the feature groups relevant to your work, and export the results in a format that fits your project.</p><a class="text-link" href="features.html">Explore all features <span aria-hidden="true">→</span></a></div></div></section>
+
+  <section class="section section-muted"><div class="container"><div class="section-heading"><p class="eyebrow">BUILT AROUND YOUR WORKFLOW</p><h2>From area selection to usable layers</h2><p>Practical controls help you request, organise and export OpenStreetMap features without leaving QGIS.</p></div>
+    <div class="feature-grid three-col">
+      <article class="feature-card"><span class="card-number">01</span><div class="line-icon" aria-hidden="true">⌖</div><h3>Flexible area selection</h3><p>Use the current map extent, draw a rectangle, take the bounding box of selected features, or use the active layer's extent.</p><a href="features.html#area-of-interest" class="card-link">Area selection details <span aria-hidden="true">→</span></a></article>
+      <article class="feature-card"><span class="card-number">02</span><div class="line-icon" aria-hidden="true">▦</div><h3>Focused OSM categories</h3><p>Choose from 11 categories spanning places, transport, roads, water, buildings, boundaries, landuse and public spaces.</p><a href="features.html#categories" class="card-link">Browse categories <span aria-hidden="true">→</span></a></article>
+      <article class="feature-card"><span class="card-number">03</span><div class="line-icon" aria-hidden="true">⇩</div><h3>Organised output</h3><p>Export to one GeoPackage or a set of Shapefiles, with separate point, line and polygon layers where applicable.</p><a href="documentation.html#output-formats" class="card-link">Compare output formats <span aria-hidden="true">→</span></a></article>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="container"><div class="section-heading section-heading-row"><div><p class="eyebrow">OPENSTREETMAP FEATURE DATA</p><h2>Eleven categories. One toolkit.</h2></div><p>Choose only the features you need for your analysis. Categories are written into their own geometry-based layers.</p></div>
+    <div class="category-preview">
+      <div class="category-preview-copy"><span class="small-label">FEATURE COVERAGE</span><h3>From everyday places to the wider urban fabric</h3><p>Bring together transport infrastructure, the built environment, natural features and administrative context from OpenStreetMap.</p><a class="text-link" href="features.html#categories">See category tags and geometry <span aria-hidden="true">→</span></a></div>
+      <img class="responsive-illustration categories-art" src="../docs/images/categories.svg" data-root-src="docs/images/categories.svg" data-fallback="assets/images/categories-fallback.svg" alt="Overview diagram of the OpenStreetMap feature categories supported by the plugin" loading="lazy" width="850" height="560">
+    </div>
+    <div class="category-chip-list"><span>Points of interest</span><span>Bus stops</span><span>Rail stops</span><span>Ferry stops</span><span>Roads</span><span>Railways</span><span>Waterways</span><span>Buildings</span><span>Administrative boundaries</span><span>Landuse</span><span>Open public spaces</span></div>
+  </div></section>
+
+  <section class="section section-bluewash"><div class="container workflow-teaser"><div class="workflow-teaser-copy"><p class="eyebrow">A CLEAR, REPEATABLE PROCESS</p><h2>Define. Select. Download. Use.</h2><p>Choose your area and categories, set the output options, and let the plugin process the returned OSM features into GIS layers.</p><a class="button button-primary" href="workflow.html">See the workflow <span aria-hidden="true">→</span></a></div><img class="responsive-illustration" src="../docs/images/workflow.svg" data-root-src="docs/images/workflow.svg" data-fallback="assets/images/workflow-fallback.svg" alt="Step-by-step workflow for downloading OpenStreetMap data" loading="lazy" width="900" height="470"></div></section>
+
+  <section class="section"><div class="container output-row"><div class="output-art-wrap"><img class="responsive-illustration" src="../docs/images/output.svg" data-root-src="docs/images/output.svg" data-fallback="assets/images/output-fallback.svg" alt="GeoPackage and Shapefile output options" loading="lazy" width="820" height="520"></div><div class="output-copy"><p class="eyebrow">OUTPUT THAT FITS YOUR PROJECT</p><h2>Two familiar formats.<br><span>Organised GIS layers.</span></h2><p>Choose GeoPackage to keep all returned OSM tags together in one file, or Shapefile when your workflow needs the format. The plugin organises results by category and geometry.</p><div class="format-list"><div><b>GPKG</b><span><strong>GeoPackage</strong><small>One file containing all output layers. Recommended when retaining every tag matters.</small></span></div><div><b>SHP</b><span><strong>Shapefile</strong><small>A separate file set for each layer, with format-specific attribute limits.</small></span></div></div><a class="text-link" href="documentation.html#output-formats">Understand output behaviour <span aria-hidden="true">→</span></a></div></div></section>
+
+  <section class="section section-cta"><div class="container cta-panel"><div><p class="eyebrow">READY TO WORK WITH OSM DATA?</p><h2>Bring the right layers into your next QGIS project.</h2><p>Install OSM Data Toolkit from the QGIS Plugin Manager or download the plugin package.</p></div><div class="cta-actions"><a class="button button-white" href="installation.html">Installation guide <span aria-hidden="true">→</span></a><a class="cta-text-link" href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">Open QGIS Plugin Repository ↗</a></div></div></section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand-block">
+      <a class="brand brand-footer" href="index.html">
+        <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="36" height="36"></span>
+        <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+      </a>
+      <p>Bring selected OpenStreetMap features into QGIS as organised, ready-to-use GIS layers.</p>
+      <a class="footer-external" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="footer-col"><h2>Explore</h2><a href="features.html">Features</a><a href="workflow.html">Workflow</a><a href="documentation.html">Technical documentation</a></div>
+    <div class="footer-col"><h2>Get started</h2><a href="installation.html">Installation guide</a><a href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">QGIS Plugin Repository ↗</a><a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Report an issue ↗</a></div>
+    <div class="footer-col footer-legal"><h2>Data &amp; licensing</h2><p>Map data © OpenStreetMap contributors, available under the ODbL.</p><p>Plugin licence: GNU GPL v3. See the repository <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span data-year>2026</span> OSM Data Toolkit · Martin Runguma</span><span>Independent community project · Not affiliated with the OpenStreetMap Foundation</span></div>
+</footer>
+</body>
+</html>

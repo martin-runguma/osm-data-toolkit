@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769AA">
+  <title>Features | OSM Data Toolkit</title>
+  <meta name="description" content="Explore area-of-interest selection, 11 OpenStreetMap categories, administrative-level filtering, Overpass server fallback, caching and export capabilities.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Features | OSM Data Toolkit">
+  <meta property="og:description" content="Explore area-of-interest selection, 11 OpenStreetMap categories, administrative-level filtering, Overpass server fallback, caching and export capabilities.">
+  <link rel="canonical" href="https://martin-runguma.github.io/osm-data-toolkit/features.html">
+  <link rel="icon" href="../icon.png" data-root-href="icon.png" data-fallback="assets/images/brand-mark.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="page page-features" data-page="features">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="OSM Data Toolkit home">
+      <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="38" height="38"></span>
+      <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
+      <div class="nav-links"><a class="nav-link" data-nav="overview" href="index.html">Overview</a><a class="nav-link" data-nav="features" href="features.html" aria-current="page">Features</a><a class="nav-link" data-nav="workflow" href="workflow.html">Workflow</a><a class="nav-link" data-nav="installation" href="installation.html">Installation</a><a class="nav-link" data-nav="documentation" href="documentation.html">Documentation</a></div>
+      <div class="nav-actions"><a class="button button-primary button-small" href="installation.html">Install plugin <span aria-hidden="true">→</span></a></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="page-hero"><div class="container page-hero-inner"><p class="eyebrow">CAPABILITIES</p><h1>Choose the area.<br><span>Choose the data.</span></h1><p class="page-lead">OSM Data Toolkit brings together flexible area selection, focused OpenStreetMap categories and practical export controls in a single QGIS workflow.</p><div class="page-hero-tags"><span>4 AOI methods</span><span>11 OSM categories</span><span>GeoPackage &amp; Shapefile</span></div></div></section>
+  <section class="section" id="area-of-interest"><div class="container"><div class="section-heading"><p class="eyebrow">01 · AREA OF INTEREST</p><h2>Four ways to define your AOI</h2><p>Use the current project view, draw a boundary, or derive the bounding box from an existing layer or selection.</p></div>
+    <div class="feature-grid four-col">
+      <article class="method-card"><span class="method-index">01</span><div class="method-symbol">▣</div><h3>Current map extent</h3><p>Pan and zoom the QGIS canvas to your study area, then update the AOI using the current map extent.</p></article>
+      <article class="method-card"><span class="method-index">02</span><div class="method-symbol">▱</div><h3>Draw rectangle</h3><p>Activate the draw-AOI tool and click-drag a rectangle directly on the map canvas.</p></article>
+      <article class="method-card"><span class="method-index">03</span><div class="method-symbol">⌑</div><h3>Selected features</h3><p>Make a vector layer active, select one or more features, and use the bounding box of the selection.</p></article>
+      <article class="method-card"><span class="method-index">04</span><div class="method-symbol">▤</div><h3>Active layer extent</h3><p>Choose a layer in the project and use its extent as the download area.</p></article>
+    </div>
+    <div class="info-band"><span class="info-icon">i</span><p>The dialog displays the AOI coordinates in <code>south, west, north, east</code> order so you can review the bounding box before downloading.</p></div>
+  </div></section>
+
+  <section class="section section-muted" id="categories"><div class="container"><div class="section-heading section-heading-row"><div><p class="eyebrow">02 · OSM FEATURE CATEGORIES</p><h2>Eleven ways to focus your download</h2></div><p>Each selected category is classified into separate point, line and/or polygon layers according to the feature geometry.</p></div>
+    <div class="category-grid">
+      <article class="category-card"><span class="category-icon" aria-hidden="true">POI</span><div><h3>Points of interest</h3><p>Shops, offices, industrial features, selected amenities, leisure and building values.</p><small>OSM tags: <code>shop</code>, <code>office</code>, <code>industrial</code>, selected <code>amenity</code>, <code>leisure</code>, <code>building</code></small><span class="geometry-tag">Points</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">BUS</span><div><h3>Bus stops</h3><p>Bus stop nodes, bus stations and public-transport platforms or stations.</p><small><code>highway=bus_stop</code>, <code>amenity=bus_station</code>, <code>public_transport=platform/station</code></small><span class="geometry-tag">Points · Polygons</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">RAIL</span><div><h3>Rail stops</h3><p>Stations, halts, platforms, tram stops and subway entrances.</p><small><code>railway=station</code>, <code>halt</code>, <code>platform</code>, <code>tram_stop</code>, <code>subway_entrance</code></small><span class="geometry-tag">Points</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">FERRY</span><div><h3>Ferry stops</h3><p>Ferry terminal locations.</p><small><code>amenity=ferry_terminal</code></small><span class="geometry-tag">Points</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">RD</span><div><h3>Roads</h3><p>Road and path features selected by the highway key.</p><small><code>highway=*</code></small><span class="geometry-tag">Lines</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">RL</span><div><h3>Railways</h3><p>Railway features selected by the railway key.</p><small><code>railway=*</code></small><span class="geometry-tag">Lines</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">WTR</span><div><h3>Waterways</h3><p>Waterway features and mapped water bodies, including wetlands, bays and reservoirs.</p><small><code>waterway=*</code>, <code>natural=water/wetland/bay</code>, <code>landuse=reservoir</code></small><span class="geometry-tag">Lines · Polygons</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">BLD</span><div><h3>Buildings</h3><p>Building footprints and areas marked with slum or informal tags.</p><small><code>building=*</code>, <code>slum=yes</code>, <code>informal=yes</code></small><span class="geometry-tag">Polygons</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">ADM</span><div><h3>Administrative boundaries</h3><p>Administrative boundary polygons, with an optional administrative-level filter.</p><small><code>boundary=administrative</code></small><span class="geometry-tag">Polygons</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">LU</span><div><h3>Landuse</h3><p>Landuse polygons, including areas marked with slum or informal tags.</p><small><code>landuse=*</code>, <code>slum=yes</code>, <code>informal=yes</code></small><span class="geometry-tag">Polygons</span></div></article>
+      <article class="category-card"><span class="category-icon" aria-hidden="true">PARK</span><div><h3>Open public spaces</h3><p>Parks, playgrounds, recreation grounds, forests, cemeteries, beaches and riverbanks.</p><small><code>leisure</code>, <code>landuse=forest/cemetery</code>, <code>natural=beach</code>, <code>waterway=riverbank</code></small><span class="geometry-tag">Points · Polygons</span></div></article>
+    </div>
+    <div class="note-panel"><strong>One OSM element can appear in more than one category.</strong><p>For example, a park can match both Landuse and Open public spaces, so it may appear in each corresponding output layer.</p></div>
+  </div></section>
+
+  <section class="section" id="additional-capabilities"><div class="container"><div class="section-heading"><p class="eyebrow">03 · DOWNLOAD &amp; PROCESSING</p><h2>Practical controls behind the download</h2><p>These capabilities help manage requests, organise returned features and make repeated work more convenient.</p></div>
+    <div class="feature-grid three-col capability-grid">
+      <article class="capability-card"><span class="capability-index">A</span><h3>Administrative-level filtering</h3><p>When Administrative boundaries is selected, choose specific <code>admin_level</code> values from 0 to 15 or request all levels.</p></article>
+      <article class="capability-card"><span class="capability-index">B</span><h3>Overpass server fallback</h3><p>Requests try <code>overpass-api.de</code> first, then the documented fallback servers if a server fails after retrying.</p></article>
+      <article class="capability-card"><span class="capability-index">C</span><h3>Local query cache</h3><p>When enabled, a repeated identical query can reuse a cached response instead of contacting Overpass again.</p></article>
+      <article class="capability-card"><span class="capability-index">D</span><h3>Background processing</h3><p>Downloads run in a background thread, with progress and a live Processing Log in the plugin interface.</p></article>
+      <article class="capability-card"><span class="capability-index">E</span><h3>Two export formats</h3><p>Save results as a single GeoPackage or as individual Shapefile layer sets.</p></article>
+      <article class="capability-card"><span class="capability-index">F</span><h3>Automatic layer loading</h3><p>Enable the option to add completed output layers to the current QGIS project automatically.</p></article>
+    </div>
+    <div class="feature-image-row"><img class="responsive-illustration" src="../docs/images/pipeline.svg" data-root-src="docs/images/pipeline.svg" data-fallback="assets/images/pipeline-fallback.svg" alt="Processing pipeline from Overpass request through feature classification and export" loading="lazy" width="900" height="460"><div><p class="eyebrow">DATA PROCESSING</p><h3>From Overpass response to GIS-ready features</h3><p>Downloaded elements are classified into the selected categories. Multipolygon relations are assembled into polygons with holes where the data allows.</p><a class="text-link" href="workflow.html#processing">Read the processing workflow <span aria-hidden="true">→</span></a></div></div>
+  </div></section>
+  <section class="section section-cta"><div class="container cta-panel"><div><p class="eyebrow">EXPLORE THE TECHNICAL DETAILS</p><h2>Understand how your data is queried and exported.</h2><p>Find the output naming rules, attribute behaviour and Shapefile-specific limitations in the documentation.</p></div><div class="cta-actions"><a class="button button-white" href="documentation.html">Read documentation <span aria-hidden="true">→</span></a></div></div></section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand-block">
+      <a class="brand brand-footer" href="index.html">
+        <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="36" height="36"></span>
+        <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+      </a>
+      <p>Bring selected OpenStreetMap features into QGIS as organised, ready-to-use GIS layers.</p>
+      <a class="footer-external" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="footer-col"><h2>Explore</h2><a href="features.html">Features</a><a href="workflow.html">Workflow</a><a href="documentation.html">Technical documentation</a></div>
+    <div class="footer-col"><h2>Get started</h2><a href="installation.html">Installation guide</a><a href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">QGIS Plugin Repository ↗</a><a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Report an issue ↗</a></div>
+    <div class="footer-col footer-legal"><h2>Data &amp; licensing</h2><p>Map data © OpenStreetMap contributors, available under the ODbL.</p><p>Plugin licence: GNU GPL v3. See the repository <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span data-year>2026</span> OSM Data Toolkit · Martin Runguma</span><span>Independent community project · Not affiliated with the OpenStreetMap Foundation</span></div>
+</footer>
+</body>
+</html>

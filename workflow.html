@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769AA">
+  <title>Workflow | OSM Data Toolkit</title>
+  <meta name="description" content="Learn how OSM Data Toolkit selects an area, queries Overpass, processes OSM features and exports organised GIS layers for QGIS.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Workflow | OSM Data Toolkit">
+  <meta property="og:description" content="Learn how OSM Data Toolkit selects an area, queries Overpass, processes OSM features and exports organised GIS layers for QGIS.">
+  <link rel="canonical" href="https://martin-runguma.github.io/osm-data-toolkit/workflow.html">
+  <link rel="icon" href="../icon.png" data-root-href="icon.png" data-fallback="assets/images/brand-mark.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="page page-workflow" data-page="workflow">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="OSM Data Toolkit home">
+      <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="38" height="38"></span>
+      <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
+      <div class="nav-links"><a class="nav-link" data-nav="overview" href="index.html">Overview</a><a class="nav-link" data-nav="features" href="features.html">Features</a><a class="nav-link" data-nav="workflow" href="workflow.html" aria-current="page">Workflow</a><a class="nav-link" data-nav="installation" href="installation.html">Installation</a><a class="nav-link" data-nav="documentation" href="documentation.html">Documentation</a></div>
+      <div class="nav-actions"><a class="button button-primary button-small" href="installation.html">Install plugin <span aria-hidden="true">→</span></a></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="page-hero"><div class="container page-hero-inner"><p class="eyebrow">HOW IT WORKS</p><h1>A clear path from <span>AOI to GIS layers.</span></h1><p class="page-lead">The plugin combines your area of interest and selected feature categories into an Overpass request, then organises the returned OSM features for export.</p><div class="page-hero-tags"><span>Define the AOI</span><span>Choose categories</span><span>Process &amp; export</span></div></div></section>
+  <section class="section"><div class="container"><div class="section-heading section-heading-row"><div><p class="eyebrow">THE DOWNLOAD JOURNEY</p><h2>Six steps, from map to layers</h2></div><p>Use the sequence below as a practical guide to a typical download in QGIS.</p></div>
+    <div class="workflow-visual"><img class="responsive-illustration" src="../docs/images/workflow.svg" data-root-src="docs/images/workflow.svg" data-fallback="assets/images/workflow-fallback.svg" alt="Visual overview of the OSM Data Toolkit download workflow" loading="lazy" width="950" height="480"></div>
+    <ol class="step-list">
+      <li class="step-item"><span class="step-number">01</span><div><h3>Define the area of interest</h3><p>Use the current QGIS map extent, draw a rectangle, use the bounding box of selected features, or take the active layer's extent. Review the displayed south, west, north and east coordinates.</p><a class="text-link" href="features.html#area-of-interest">Compare AOI methods <span aria-hidden="true">→</span></a></div><span class="step-side-label">AOI</span></li>
+      <li class="step-item"><span class="step-number">02</span><div><h3>Select the OSM categories</h3><p>Tick the feature groups you need. Select All and Clear All help manage the list. For administrative boundaries, choose the required <code>admin_level</code> values or leave all levels enabled.</p><a class="text-link" href="features.html#categories">Review supported categories <span aria-hidden="true">→</span></a></div><span class="step-side-label">CATEGORIES</span></li>
+      <li class="step-item"><span class="step-number">03</span><div><h3>Configure output options</h3><p>Choose GeoPackage or Shapefile, select an output directory, and decide whether to add finished layers to QGIS automatically and reuse the local cache where available.</p><a class="text-link" href="documentation.html#output-formats">Compare file formats <span aria-hidden="true">→</span></a></div><span class="step-side-label">OUTPUT</span></li>
+      <li class="step-item"><span class="step-number">04</span><div><h3>Start the Overpass download</h3><p>Click Download OSM Data. Enter a city, country, region and area name in the naming dialog, then continue to download. The values are joined to form the output base name.</p></div><span class="step-side-label">REQUEST</span></li>
+      <li class="step-item"><span class="step-number">05</span><div><h3>Process and organise returned features</h3><p>The plugin classifies returned OSM elements into the selected categories and separates results by geometry. Multipolygon relations are assembled into polygons with holes where the data allows. Progress is shown in the Processing Log.</p></div><span class="step-side-label">PROCESS</span></li>
+      <li class="step-item"><span class="step-number">06</span><div><h3>Load and use the resulting layers</h3><p>Output is written as a GeoPackage or Shapefile layer sets. When automatic loading is enabled, completed layers are added to the current QGIS project.</p><a class="text-link" href="documentation.html#layer-names">See layer naming conventions <span aria-hidden="true">→</span></a></div><span class="step-side-label">QGIS</span></li>
+    </ol>
+  </div></section>
+
+  <section class="section section-muted" id="processing"><div class="container"><div class="section-heading"><p class="eyebrow">UNDER THE HOOD</p><h2>How the Overpass request is handled</h2><p>The plugin uses the public Overpass API to retrieve matching OpenStreetMap elements for the selected area and categories.</p></div>
+    <div class="processing-layout"><div class="processing-copy"><div class="processing-point"><span>01</span><div><h3>Request the selected data</h3><p>The plugin submits a request for the chosen AOI and categories to the Overpass API. Each request allows up to 300 seconds.</p></div></div><div class="processing-point"><span>02</span><div><h3>Try alternate servers when needed</h3><p>The first endpoint is <code>overpass-api.de</code>. If a server fails after retrying, the plugin can fall back to <code>lz4.overpass-api.de</code> and <code>overpass.kumi.systems</code>.</p></div></div><div class="processing-point"><span>03</span><div><h3>Classify and prepare geometry</h3><p>Returned elements are matched to the selected categories and written into the appropriate point, line or polygon layers. Multipolygon relations are assembled where the data allows.</p></div></div><div class="processing-point"><span>04</span><div><h3>Stage, export and clean up</h3><p>The plugin first writes to a temporary GeoPackage in the output folder, converts it to the chosen format, and removes only temporary files matching <code>.osm_toolkit_temp_*.gpkg</code>.</p></div></div></div><img class="responsive-illustration processing-art" src="../docs/images/pipeline.svg" data-root-src="docs/images/pipeline.svg" data-fallback="assets/images/pipeline-fallback.svg" alt="Diagram of the download and data processing pipeline" loading="lazy" width="850" height="580"></div>
+  </div></section>
+
+  <section class="section"><div class="container"><div class="section-heading section-heading-row"><div><p class="eyebrow">OUTPUT OPTIONS</p><h2>Choose the right container</h2></div><p>Both formats are supported, but their ability to retain attributes differs. GeoPackage is recommended when you need all OSM tags.</p></div><div class="output-comparison"><article><div class="format-heading"><span class="format-badge gpkg">GPKG</span><h3>GeoPackage</h3><span class="recommended-tag">Recommended</span></div><ul><li>All output layers are stored in one <code>.gpkg</code> file.</li><li>All OSM tags are retained.</li><li>Text fields have no fixed Shapefile-style 254-character limit.</li><li>Suitable for larger requests with many different tags.</li></ul></article><article><div class="format-heading"><span class="format-badge shp">SHP</span><h3>Shapefile</h3></div><ul><li>Each layer is written as a separate Shapefile set.</li><li>Text fields are limited to 254 characters.</li><li>Column and record-size limits can prevent every tag column from being retained.</li><li>Use when a downstream workflow specifically requires <code>.shp</code>.</li></ul></article></div><div class="output-diagram"><img class="responsive-illustration" src="../docs/images/output.svg" data-root-src="docs/images/output.svg" data-fallback="assets/images/output-fallback.svg" alt="Diagram comparing a single GeoPackage with multiple Shapefile outputs" loading="lazy" width="900" height="480"></div></div></section>
+
+  <section class="section section-bluewash"><div class="container tips-layout"><div><p class="eyebrow">LARGE-AREA DOWNLOADS</p><h2>Make requests easier on shared servers.</h2><p>Large areas can produce much larger responses, particularly when buildings and roads are included. The public Overpass servers are shared infrastructure.</p></div><div class="tips-list"><div><b>01</b><p>Keep the AOI focused on the area you need.</p></div><div><b>02</b><p>Tick only the categories required for the task.</p></div><div><b>03</b><p>Split very large regions into smaller rectangles.</p></div><div><b>04</b><p>Prefer GeoPackage when all tags matter, and retry later if public servers are busy.</p></div></div></div></section>
+  <section class="section section-cta"><div class="container cta-panel"><div><p class="eyebrow">NEXT STEP</p><h2>Install the plugin and run your first download.</h2><p>Follow the installation steps and quick-start checklist for your QGIS version.</p></div><div class="cta-actions"><a class="button button-white" href="installation.html">Installation guide <span aria-hidden="true">→</span></a></div></div></section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand-block">
+      <a class="brand brand-footer" href="index.html">
+        <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="36" height="36"></span>
+        <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+      </a>
+      <p>Bring selected OpenStreetMap features into QGIS as organised, ready-to-use GIS layers.</p>
+      <a class="footer-external" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="footer-col"><h2>Explore</h2><a href="features.html">Features</a><a href="workflow.html">Workflow</a><a href="documentation.html">Technical documentation</a></div>
+    <div class="footer-col"><h2>Get started</h2><a href="installation.html">Installation guide</a><a href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">QGIS Plugin Repository ↗</a><a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Report an issue ↗</a></div>
+    <div class="footer-col footer-legal"><h2>Data &amp; licensing</h2><p>Map data © OpenStreetMap contributors, available under the ODbL.</p><p>Plugin licence: GNU GPL v3. See the repository <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span data-year>2026</span> OSM Data Toolkit · Martin Runguma</span><span>Independent community project · Not affiliated with the OpenStreetMap Foundation</span></div>
+</footer>
+</body>
+</html>

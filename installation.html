@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769AA">
+  <title>Installation | OSM Data Toolkit</title>
+  <meta name="description" content="Install OSM Data Toolkit in QGIS using the Plugin Manager, a ZIP package or a manual source installation. Includes compatibility and quick start instructions.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Installation | OSM Data Toolkit">
+  <meta property="og:description" content="Install OSM Data Toolkit in QGIS using the Plugin Manager, a ZIP package or a manual source installation. Includes compatibility and quick start instructions.">
+  <link rel="canonical" href="https://martin-runguma.github.io/osm-data-toolkit/installation.html">
+  <link rel="icon" href="../icon.png" data-root-href="icon.png" data-fallback="assets/images/brand-mark.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="page page-installation" data-page="installation">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="OSM Data Toolkit home">
+      <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="38" height="38"></span>
+      <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
+      <div class="nav-links"><a class="nav-link" data-nav="overview" href="index.html">Overview</a><a class="nav-link" data-nav="features" href="features.html">Features</a><a class="nav-link" data-nav="workflow" href="workflow.html">Workflow</a><a class="nav-link" data-nav="installation" href="installation.html" aria-current="page">Installation</a><a class="nav-link" data-nav="documentation" href="documentation.html">Documentation</a></div>
+      <div class="nav-actions"><a class="button button-primary button-small" href="installation.html">Install plugin <span aria-hidden="true">→</span></a></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="page-hero"><div class="container page-hero-inner"><p class="eyebrow">INSTALLATION &amp; QUICK START</p><h1>Get OSM Data Toolkit <span>into QGIS.</span></h1><p class="page-lead">Install from the official QGIS Plugin Manager, use a plugin ZIP package, or place the plugin folder in your QGIS profile's plugin directory.</p><div class="page-hero-tags"><span>QGIS 3.28.0+</span><span>QGIS 4.x</span><span>Qt5 &amp; Qt6</span></div></div></section>
+  <section class="section"><div class="container"><div class="compatibility-banner"><div class="compatibility-icon">✓</div><div><span class="small-label">PUBLISHED COMPATIBILITY</span><h2>QGIS 3.28.0 through 4.99.0</h2><p>The QGIS Plugins Repository lists the stable plugin release with Qt5 / Qt6 compatibility and no external Python dependencies.</p></div><a class="button button-primary" href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">Open plugin listing ↗</a></div>
+    <div class="section-heading"><p class="eyebrow">CHOOSE AN INSTALLATION METHOD</p><h2>Three ways to install</h2><p>For most users, the Plugin Manager is the simplest route.</p></div>
+    <div class="install-methods">
+      <article class="install-card install-recommended"><div class="install-card-top"><span class="step-kicker">METHOD 01</span><span class="recommended-tag">Recommended</span></div><h3>QGIS Plugin Manager</h3><p>Install directly from the official QGIS plugin repository.</p><ol><li>Open QGIS.</li><li>Go to <strong>Plugins → Manage and Install Plugins…</strong>.</li><li>Search for <strong>OSM Data Toolkit</strong>.</li><li>Select the plugin and click <strong>Install Plugin</strong>.</li></ol><a class="text-link" href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">View the official plugin page <span aria-hidden="true">↗</span></a></article>
+      <article class="install-card"><div class="install-card-top"><span class="step-kicker">METHOD 02</span></div><h3>Install from ZIP</h3><p>Use a downloaded plugin package when you have the ZIP file locally.</p><ol><li>Download the latest plugin ZIP from the QGIS Plugins Repository.</li><li>In QGIS, open <strong>Plugins → Manage and Install Plugins…</strong>.</li><li>Choose <strong>Install from ZIP</strong> in the plugin manager.</li><li>Browse to the ZIP package and click <strong>Install Plugin</strong>.</li></ol><a class="text-link" href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/version/1.0.1/download/" target="_blank" rel="noopener">Download plugin ZIP <span aria-hidden="true">↗</span></a></article>
+      <article class="install-card"><div class="install-card-top"><span class="step-kicker">METHOD 03</span></div><h3>Install from source</h3><p>Use this method when working with the plugin source or managing a manual installation.</p><ol><li>Open the <a href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">GitHub repository</a>.</li><li>Obtain the plugin package and locate the <code>OSM_Data_Toolkit</code> folder.</li><li>Copy that folder into your QGIS Python plugins directory.</li><li>Restart QGIS, then enable the plugin in the Plugin Manager.</li></ol></article>
+    </div>
+    <div class="info-band"><span class="info-icon">i</span><p>After installation, confirm that OSM Data Toolkit is enabled in the Installed tab of the Plugin Manager. Open it from the QGIS Plugins menu or its toolbar icon.</p></div>
+  </div></section>
+
+  <section class="section section-muted" id="plugin-directories"><div class="container"><div class="section-heading"><p class="eyebrow">MANUAL INSTALLATION</p><h2>Where QGIS stores plugins</h2><p>The following default-profile locations are documented in the project README. If you use a different QGIS profile, use that profile's corresponding plugin directory.</p></div>
+    <div class="directory-table-wrap"><table class="data-table directory-table"><thead><tr><th scope="col">Operating system</th><th scope="col">Default plugin directory</th></tr></thead><tbody><tr><th scope="row">Windows</th><td><code>%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins</code></td></tr><tr><th scope="row">Linux</th><td><code>~/.local/share/QGIS/QGIS3/profiles/default/python/plugins</code></td></tr><tr><th scope="row">macOS</th><td><code>~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins</code></td></tr></tbody></table></div>
+    <div class="info-band"><span class="info-icon">i</span><p>These are the profile paths listed in the repository documentation. The active profile and QGIS installation can affect the exact location on an individual computer.</p></div>
+  </div></section>
+
+  <section class="section"><div class="container"><div class="section-heading"><p class="eyebrow">FIRST DOWNLOAD</p><h2>Quick start: your first OSM extract</h2><p>Once the plugin is installed and enabled, follow these steps from the main plugin dialog.</p></div>
+    <div class="quickstart-grid"><div class="quickstart-steps"><div class="quickstart-step"><span>1</span><div><h3>Define your area</h3><p>Use the current map extent, draw an AOI rectangle, use selected features, or use the active layer extent.</p></div></div><div class="quickstart-step"><span>2</span><div><h3>Choose categories</h3><p>Select the OpenStreetMap feature groups you need. For administrative boundaries, choose levels or leave the filter at all levels.</p></div></div><div class="quickstart-step"><span>3</span><div><h3>Set output options</h3><p>Choose GeoPackage or Shapefile, set the output folder, and optionally enable automatic layer loading and local cache reuse.</p></div></div><div class="quickstart-step"><span>4</span><div><h3>Name and download</h3><p>Click Download OSM Data, enter the city, country, region and area name, then select Continue to Download.</p></div></div><div class="quickstart-step"><span>5</span><div><h3>Review the Processing Log</h3><p>Follow the progress log. When the download finishes, the output files are available in the chosen directory and may be added to the QGIS project automatically.</p></div></div></div>
+      <aside class="quickstart-aside"><span class="aside-label">EXAMPLE OUTPUT NAME</span><code class="filename-example">Nairobi_Kenya_NairobiCounty_CBD</code><p>The city, country, region and AOI labels are combined with underscores. Characters not allowed in file names are cleaned up automatically.</p><div class="aside-divider"></div><span class="aside-label">A PRACTICAL TIP</span><p>Start with a small AOI and only the categories you need. Buildings and roads can produce especially large downloads.</p></aside>
+    </div>
+  </div></section>
+  <section class="section section-cta"><div class="container cta-panel"><div><p class="eyebrow">NEED MORE DETAIL?</p><h2>Understand the layers before you export.</h2><p>Technical documentation covers naming, metadata, geometry, format limits and troubleshooting.</p></div><div class="cta-actions"><a class="button button-white" href="documentation.html">Read documentation <span aria-hidden="true">→</span></a></div></div></section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand-block">
+      <a class="brand brand-footer" href="index.html">
+        <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="36" height="36"></span>
+        <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+      </a>
+      <p>Bring selected OpenStreetMap features into QGIS as organised, ready-to-use GIS layers.</p>
+      <a class="footer-external" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="footer-col"><h2>Explore</h2><a href="features.html">Features</a><a href="workflow.html">Workflow</a><a href="documentation.html">Technical documentation</a></div>
+    <div class="footer-col"><h2>Get started</h2><a href="installation.html">Installation guide</a><a href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">QGIS Plugin Repository ↗</a><a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Report an issue ↗</a></div>
+    <div class="footer-col footer-legal"><h2>Data &amp; licensing</h2><p>Map data © OpenStreetMap contributors, available under the ODbL.</p><p>Plugin licence: GNU GPL v3. See the repository <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span data-year>2026</span> OSM Data Toolkit · Martin Runguma</span><span>Independent community project · Not affiliated with the OpenStreetMap Foundation</span></div>
+</footer>
+</body>
+</html>

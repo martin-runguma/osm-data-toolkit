@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1769AA">
+  <title>Documentation | OSM Data Toolkit</title>
+  <meta name="description" content="Technical reference for AOI selection, OSM categories, Overpass processing, GeoPackage and Shapefile output, metadata, naming, caching and troubleshooting.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Documentation | OSM Data Toolkit">
+  <meta property="og:description" content="Technical reference for AOI selection, OSM categories, Overpass processing, GeoPackage and Shapefile output, metadata, naming, caching and troubleshooting.">
+  <link rel="canonical" href="https://martin-runguma.github.io/osm-data-toolkit/documentation.html">
+  <link rel="icon" href="../icon.png" data-root-href="icon.png" data-fallback="assets/images/brand-mark.svg">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/site.js" defer></script>
+</head>
+<body class="page page-documentation" data-page="documentation">
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="OSM Data Toolkit home">
+      <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="38" height="38"></span>
+      <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+    </a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
+      <div class="nav-links"><a class="nav-link" data-nav="overview" href="index.html">Overview</a><a class="nav-link" data-nav="features" href="features.html">Features</a><a class="nav-link" data-nav="workflow" href="workflow.html">Workflow</a><a class="nav-link" data-nav="installation" href="installation.html">Installation</a><a class="nav-link" data-nav="documentation" href="documentation.html" aria-current="page">Documentation</a></div>
+      <div class="nav-actions"><a class="button button-primary button-small" href="installation.html">Install plugin <span aria-hidden="true">→</span></a></div>
+    </nav>
+  </div>
+</header>
+<main id="main">
+  <section class="page-hero"><div class="container page-hero-inner"><p class="eyebrow">TECHNICAL REFERENCE</p><h1>Understand the data <span>behind each layer.</span></h1><p class="page-lead">A practical reference for area selection, category matching, Overpass requests, output naming, attribute preservation and common troubleshooting.</p><div class="page-hero-tags"><span>AOI behaviour</span><span>Data attributes</span><span>Output details</span></div></div></section>
+  <section class="section docs-section"><div class="container docs-layout">
+    <aside class="docs-sidebar"><span class="small-label">ON THIS PAGE</span><nav aria-label="Documentation sections"><a href="#aoi-behaviour">AOI selection</a><a href="#feature-categories">Feature categories</a><a href="#download-processing">Download processing</a><a href="#output-formats">Output formats</a><a href="#file-naming">Output naming</a><a href="#layer-names">Layer names</a><a href="#attributes">Attributes &amp; metadata</a><a href="#administrative-boundaries">Administrative boundaries</a><a href="#overpass-api">Overpass API</a><a href="#cache-temp-files">Cache &amp; temporary files</a><a href="#troubleshooting">Troubleshooting</a><a href="#attribution-licensing">Attribution &amp; licensing</a></nav></aside>
+    <div class="docs-content">
+      <section class="docs-block" id="aoi-behaviour"><p class="eyebrow">01 · INPUT AREA</p><h2>Area of interest selection</h2><p>The plugin supports four AOI methods. Each method supplies a bounding box for the download request.</p><div class="docs-method-list"><div><b>Current map extent</b><p>Use the visible extent of the QGIS map canvas. Pan and zoom to the required area, then update the current map extent in the plugin dialog.</p></div><div><b>Draw rectangle</b><p>Activate Draw AOI and click-drag a rectangle on the QGIS map canvas.</p></div><div><b>Selected features</b><p>Make a vector layer active, select one or more features, and use their combined bounding box.</p></div><div><b>Active layer extent</b><p>Use the extent of the currently active layer.</p></div></div><p>The dialog displays coordinates in <code>south, west, north, east</code> order for review before downloading.</p></section>
+
+      <section class="docs-block" id="feature-categories"><p class="eyebrow">02 · DATA SELECTION</p><h2>Supported feature categories</h2><p>These are the categories and OSM tag families listed in the project documentation.</p><div class="table-scroll"><table class="data-table"><thead><tr><th scope="col">Category</th><th scope="col">OSM tags / selection</th><th scope="col">Output geometry</th></tr></thead><tbody>
+        <tr><th scope="row">Points of interest</th><td><code>shop</code>, <code>office</code>, <code>industrial</code>, selected <code>amenity</code>, <code>leisure</code> and <code>building</code> values</td><td>Points</td></tr>
+        <tr><th scope="row">Bus stops</th><td><code>highway=bus_stop</code>, <code>amenity=bus_station</code>, <code>public_transport=platform</code> or <code>station</code></td><td>Points, polygons</td></tr>
+        <tr><th scope="row">Rail stops</th><td><code>railway=station</code>, <code>halt</code>, <code>platform</code>, <code>tram_stop</code>, <code>subway_entrance</code></td><td>Points</td></tr>
+        <tr><th scope="row">Ferry stops</th><td><code>amenity=ferry_terminal</code></td><td>Points</td></tr>
+        <tr><th scope="row">Roads</th><td><code>highway=*</code></td><td>Lines</td></tr>
+        <tr><th scope="row">Railways</th><td><code>railway=*</code></td><td>Lines</td></tr>
+        <tr><th scope="row">Waterways</th><td><code>waterway=*</code>, water bodies including <code>natural=water</code>, <code>wetland</code>, <code>bay</code> and <code>landuse=reservoir</code></td><td>Lines, polygons</td></tr>
+        <tr><th scope="row">Buildings</th><td><code>building=*</code>, plus <code>slum=yes</code> and <code>informal=yes</code> areas</td><td>Polygons</td></tr>
+        <tr><th scope="row">Administrative boundaries</th><td><code>boundary=administrative</code></td><td>Polygons</td></tr>
+        <tr><th scope="row">Landuse</th><td><code>landuse=*</code>, plus <code>slum=yes</code> and <code>informal=yes</code> areas</td><td>Polygons</td></tr>
+        <tr><th scope="row">Open public spaces</th><td>Leisure parks, playgrounds and recreation grounds; <code>landuse=forest</code> or <code>cemetery</code>; <code>natural=beach</code>; <code>waterway=riverbank</code></td><td>Points, polygons</td></tr>
+      </tbody></table></div><div class="note-panel"><strong>Overlapping category matches are possible.</strong><p>An OSM element can match more than one category. A park, for example, may be included in Landuse and Open public spaces.</p></div></section>
+
+      <section class="docs-block" id="download-processing"><p class="eyebrow">03 · PROCESSING</p><h2>Download processing</h2><p>After the user selects an AOI and one or more categories, the plugin requests matching data from the Overpass API. Downloads run in a background thread and the interface provides progress and a Processing Log.</p><p>Returned OSM elements are classified into the selected feature categories and organised into geometry-based layers. Multipolygon relations are assembled into polygons, including holes, where the data allows.</p><p>Each Overpass request allows up to 300 seconds. Public server availability and response size can affect the time and success of a request.</p></section>
+
+      <section class="docs-block" id="output-formats"><p class="eyebrow">04 · EXPORT</p><h2>GeoPackage and Shapefile output</h2><div class="format-doc-grid"><article><span class="format-badge gpkg">GPKG</span><h3>GeoPackage</h3><ul><li>All layers are stored inside one <code>.gpkg</code> file.</li><li>All OSM tag columns are retained.</li><li>Text field length is not limited to 254 characters by the Shapefile constraint.</li><li>Recommended when a layer has many different OSM tags or every tag must be kept.</li></ul></article><article><span class="format-badge shp">SHP</span><h3>Shapefile</h3><ul><li>Each output layer is written as its own Shapefile file set.</li><li>Text fields are limited to 254 characters.</li><li>Column storage is constrained by an approximately 65 KB record limit.</li><li>If the layer still exceeds the limit, the plugin omits the least-frequent tag columns and reports them in the Processing Log.</li></ul></article></div><p>Shapefile output also has two documented behaviours: administrative boundaries are written as separate files for each <code>admin_level</code> present, alongside the combined file; bus-station polygons are converted to centroids and merged into the bus-stop points layer.</p></section>
+
+      <section class="docs-block" id="file-naming"><p class="eyebrow">05 · FILES</p><h2>Output naming conventions</h2><p>The naming dialog asks for a city, country, region and area-of-interest name. The values are joined with underscores to create the output base name. Characters that are not allowed in file names are cleaned up automatically.</p><div class="code-example"><span class="small-label">EXAMPLE BASE NAME</span><code>Nairobi_Kenya_NairobiCounty_CBD</code><div class="code-example-result"><span>GeoPackage</span><code>Nairobi_Kenya_NairobiCounty_CBD.gpkg</code></div><div class="code-example-result"><span>Shapefile layer</span><code>Nairobi_Kenya_NairobiCounty_CBD_roads_line.shp</code></div></div></section>
+
+      <section class="docs-block" id="layer-names"><p class="eyebrow">06 · LAYER ORGANISATION</p><h2>Layer names</h2><p>Each output layer uses a category and geometry suffix in the form <code>&lt;category&gt;_&lt;geometry&gt;</code>.</p><div class="layer-name-examples"><span><code>roads_line</code><small>Road features</small></span><span><code>poi_point</code><small>Points of interest</small></span><span><code>buildings_polygon</code><small>Building footprints</small></span></div></section>
+
+      <section class="docs-block" id="attributes"><p class="eyebrow">07 · ATTRIBUTES</p><h2>OSM metadata and tag preservation</h2><p>Every output layer includes the following OSM metadata fields, followed by one column for each OSM tag found in the data:</p><div class="field-grid"><code>osm_id</code><code>osm_type</code><code>osm_version</code><code>osm_timestamp</code><code>osm_changeset</code><code>osm_uid</code><code>osm_user</code></div><p>OSM tag names are case-sensitive, while GeoPackage and Shapefile field names are not. If two tags differ only by case (for example, <code>fixme</code> and <code>FIXME</code>), the later one is stored with a numeric suffix, such as <code>FIXME_2</code>, so the values can remain distinct.</p><p>GeoPackage preserves all OSM tags. Shapefile's record-size and field-length constraints can limit which tag fields are written; any omitted rare tag columns are reported in the Processing Log.</p></section>
+
+      <section class="docs-block" id="administrative-boundaries"><p class="eyebrow">08 · ADMINISTRATIVE DATA</p><h2>Administrative boundaries</h2><p>Select Administrative boundaries to download features tagged <code>boundary=administrative</code>. The plugin offers an administrative-level filter: choose specific <code>admin_level</code> values from 0 to 15 or leave the selection to include all levels.</p><p>For Shapefile output, the plugin writes additional separate boundary files for each <code>admin_level</code> present (for example, suffixes such as <code>_Lvl4</code> and <code>_Lvl6</code>) alongside the combined administrative-boundary output.</p></section>
+
+      <section class="docs-block" id="overpass-api"><p class="eyebrow">09 · SERVICE BEHAVIOUR</p><h2>Overpass API endpoints and fallback</h2><p>The documented endpoint order is:</p><ol class="endpoint-list"><li><code>overpass-api.de</code> — primary endpoint</li><li><code>lz4.overpass-api.de</code> — fallback endpoint</li><li><code>overpass.kumi.systems</code> — additional fallback endpoint</li></ol><p>If an endpoint fails after retrying, the plugin tries the next server. Each request has a timeout of up to 300 seconds. These are shared public services; very large or repeated requests can be slow or rejected.</p><p>For service usage guidance, see the <a href="https://wiki.openstreetmap.org/wiki/Overpass_API#Public_Overpass_API_instances" target="_blank" rel="noopener">Overpass API public instance guidance ↗</a>.</p></section>
+
+      <section class="docs-block" id="cache-temp-files"><p class="eyebrow">10 · LOCAL FILES</p><h2>Caching and temporary files</h2><p>When the local cache option is enabled, repeated identical queries can reuse earlier results instead of sending the same request to Overpass again.</p><p>During export, results are first written to a temporary GeoPackage named with the <code>.osm_toolkit_temp_*.gpkg</code> pattern in the output folder. The file is converted to the chosen format and then removed. The plugin documentation states that only files matching this temporary pattern are deleted.</p></section>
+
+      <section class="docs-block" id="troubleshooting"><p class="eyebrow">11 · SUPPORT</p><h2>Troubleshooting</h2><div class="table-scroll"><table class="data-table troubleshoot-table"><thead><tr><th scope="col">What you see</th><th scope="col">What to do</th></tr></thead><tbody><tr><th scope="row">Download fails or times out</th><td>Try a smaller AOI, select fewer categories, or retry later when the public Overpass servers are less busy.</td></tr><tr><th scope="row">Unclassified OSM elements are reported</th><td>This is informational. These are mostly untagged vertices already used in line and polygon geometries.</td></tr><tr><th scope="row">Some tag columns are missing in Shapefile</th><td>Shapefile has a record-size limit. Check the Processing Log for omitted columns; use GeoPackage to keep every OSM tag.</td></tr><tr><th scope="row">Text is cut off at 254 characters</th><td>This is a Shapefile text-field limit. Use GeoPackage for longer text values.</td></tr><tr><th scope="row">Columns appear as <code>fixme</code> and <code>FIXME_2</code></th><td>OSM tags that differ only by letter case are kept separately; the later field receives a numeric suffix.</td></tr><tr><th scope="row">Old plugin behaviour remains after updating</th><td>Restart QGIS completely so the updated code is loaded.</td></tr></tbody></table></div><div class="note-panel"><strong>When opening an issue</strong><p>Include your QGIS version and operating system, the output format, the approximate AOI size and the full error message from the Processing Log. <a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Open a GitHub issue ↗</a>.</p></div></section>
+
+      <section class="docs-block" id="attribution-licensing"><p class="eyebrow">12 · DATA &amp; LICENSING</p><h2>Attribution and licensing</h2><div class="attribution-box"><p class="osm-attribution">© OpenStreetMap contributors</p><p>OpenStreetMap data is available under the <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">Open Database Licence (ODbL) ↗</a>. If you publish maps or data made with this plugin, credit OpenStreetMap contributors.</p></div><p>OSM Data Toolkit is an independent community project and is not endorsed by or affiliated with the OpenStreetMap Foundation. Follow Overpass API usage guidance and avoid very large or repeated requests to public servers.</p><p>The plugin repository's <code>LICENSE</code> file contains the <strong>GNU General Public License, version 3</strong>. Refer to the <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">root LICENSE file ↗</a> for the full terms.</p></section>
+    </div>
+  </div></section>
+</main>
+<footer class="site-footer">
+  <div class="container footer-main">
+    <div class="footer-brand-block">
+      <a class="brand brand-footer" href="index.html">
+        <span class="brand-mark"><img src="../icon.png" data-root-src="icon.png" data-fallback="assets/images/brand-mark.svg" alt="" width="36" height="36"></span>
+        <span class="brand-copy"><span class="brand-name">OSM Data <strong>Toolkit</strong></span><span class="brand-caption">A QGIS plugin</span></span>
+      </a>
+      <p>Bring selected OpenStreetMap features into QGIS as organised, ready-to-use GIS layers.</p>
+      <a class="footer-external" href="https://github.com/martin-runguma/osm-data-toolkit" target="_blank" rel="noopener">View source on GitHub <span aria-hidden="true">↗</span></a>
+    </div>
+    <div class="footer-col"><h2>Explore</h2><a href="features.html">Features</a><a href="workflow.html">Workflow</a><a href="documentation.html">Technical documentation</a></div>
+    <div class="footer-col"><h2>Get started</h2><a href="installation.html">Installation guide</a><a href="https://plugins.qgis.org/plugins/OSM_Data_Toolkit/" target="_blank" rel="noopener">QGIS Plugin Repository ↗</a><a href="https://github.com/martin-runguma/osm-data-toolkit/issues" target="_blank" rel="noopener">Report an issue ↗</a></div>
+    <div class="footer-col footer-legal"><h2>Data &amp; licensing</h2><p>Map data © OpenStreetMap contributors, available under the ODbL.</p><p>Plugin licence: GNU GPL v3. See the repository <a href="https://github.com/martin-runguma/osm-data-toolkit/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>.</p></div>
+  </div>
+  <div class="container footer-bottom"><span>© <span data-year>2026</span> OSM Data Toolkit · Martin Runguma</span><span>Independent community project · Not affiliated with the OpenStreetMap Foundation</span></div>
+</footer>
+</body>
+</html>
