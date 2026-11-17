@@ -573,7 +573,7 @@ OSM_FEATURES: Dict[str, OSMFeature] = {
         feature_id="open_public_spaces",
         name="Open public spaces",
         category=CATEGORY_LAND_BUILT_ENVIRONMENT,
-        geometry="mixed",
+        geometry="polygon",
 
         tags={
             "landuse": [

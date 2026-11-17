@@ -154,9 +154,30 @@ def _tag_value_matches(actual: Any, expected: Any) -> bool:
 
 
 def _element_matches_spec(element: dict, spec: Any) -> bool:
-    """Check whether an OSM element's tags satisfy a feature's tag rules."""
+    """Check that OSM element type and tags satisfy a feature specification."""
+
+    # Enforce the geometry declared by the feature specification.
+    allowed_element_types = {
+        "point": {"node"},
+        "line": {"way"},
+        "linestring": {"way"},
+        "polygon": {"way", "relation"},
+        "multipolygon": {"relation"},
+        "mixed": {"node", "way", "relation"},
+    }
+
+    geometry = _spec_geometry(spec)
+    element_type = element.get("type")
+
+    allowed = allowed_element_types.get(geometry, set())
+
+    if element_type not in allowed:
+        return False
+
+    # Check the OSM tag conditions.
     tags = element.get("tags") or {}
     filters = _spec_tags(spec)
+
     if not filters:
         return False
 
@@ -164,6 +185,7 @@ def _element_matches_spec(element: dict, spec: Any) -> bool:
         key in tags and _tag_value_matches(tags.get(key), expected)
         for key, expected in filters.items()
     ]
+
     return all(checks) if _spec_match_mode(spec) == "AND" else any(checks)
 
 

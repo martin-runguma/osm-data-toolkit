@@ -2,21 +2,40 @@
 name=OSM Data Toolkit
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
-description=Download OpenStreetMap data for an area of interest and export it as organised GeoPackage or Shapefile layers.
-version=1.1.0
+description=Download OpenStreetMap data for an area of interest and export it as organised GeoPackage or Shapefile layers, with support for 33 interface languages.
+version=2.1.0
 author=Martin Runguma
 email=martin.runguma@gmail.com
-about=OSM Data Toolkit downloads OpenStreetMap data from the Overpass API for an area you draw on the map (or a bounding box) and turns it into ready-to-use QGIS layers, without leaving QGIS.
-    Choose from categories such as points of interest, bus, rail and ferry stops, roads, railways, waterways, buildings, administrative boundaries, landuse and open public spaces. Each category is written as separate point, line and polygon layers.
+about=OSM Data Toolkit downloads OpenStreetMap data from the Overpass API for an area you draw on the map or define using coordinates, turning it into ready-to-use QGIS layers without leaving QGIS.
+
+    Choose from categories such as points of interest, bus, rail and ferry stops, roads, railways, waterways, buildings, administrative boundaries, landuse and open public spaces. Each category is organised into separate point, line and polygon layers.
+
     Features:
     - Draw a rectangle on the canvas or enter coordinates for the area of interest
     - Select the OSM feature categories to download
     - Export to GeoPackage (all layers in one file) or Shapefile
-    - Optional local cache so repeat downloads are quick
-    - Optional automatic loading of the results into the QGIS project
-    - Works with large areas, with progress and a processing log
-    Notes: an internet connection is required. Very large areas can take a long time and may be limited by the public Overpass servers. Shapefiles cannot hold very many attribute columns, so GeoPackage is recommended for large areas. Data (c) OpenStreetMap contributors, available under the Open Database Licence (ODbL). This plugin is not endorsed by or affiliated with the OpenStreetMap Foundation.
-changelog=1.1.0
+    - Optional local cache for faster repeat downloads
+    - Optional automatic loading of results into the QGIS project
+    - Support for large areas, with progress tracking and a processing log
+    - Multilingual interface with a language selector and 33 supported languages
+    - Dedicated translation modules for each supported language
+    - Switch interface languages directly within the plugin
+
+    Notes: An internet connection is required. Very large areas can take a long time and may be limited by public Overpass servers. GeoPackage is recommended for large datasets because Shapefiles have attribute and field-name limitations.
+
+    Data (c) OpenStreetMap contributors, available under the Open Database Licence (ODbL). This plugin is not endorsed by or affiliated with the OpenStreetMap Foundation.
+
+changelog=2.1.0
+    - Expanded multilingual support to 33 languages
+    - Added dedicated translation modules for all supported language codes
+    - Integrated language switching throughout the plugin interface
+    - Improved translation coverage and consistency across interface components
+    2.0.0
+    - Added separate editable translation modules for all 33 supported language codes and connected them to the language selector
+    1.2.0
+    - Added a language selector and OSM interface translation framework
+    - Introduced initial translations for English, French, Spanish, Portuguese, Kiswahili and Arabic
+    1.1.0
     - Redesigned interface in the style of the NHIS Portal: brand header, numbered step cards, category chips, status and log panel
     - Added a shared theme module and bundled icons; no change to download or export behaviour
     1.0.1
@@ -28,15 +47,16 @@ changelog=1.1.0
     0.1.3
     - Code quality: replaced broad try/except/pass blocks flagged by the security scan
     0.1.2
-    - Metadata: declare QGIS 4 support with qgisMaximumVersion (supportsQt6 is deprecated)
+    - Metadata: declared QGIS 4 support with qgisMaximumVersion
     0.1.1
-    - Compatible with both Qt5 (QGIS 3.x) and Qt6 (QGIS 4) builds
-    - Fixed export failure when OSM tags differ only by letter case (for example fixme and FIXME)
-    - Fixed Shapefile export failures on large areas (text length and attribute-table size limits)
+    - Compatible with both Qt5 (QGIS 3.x) and Qt6 (QGIS 4)
+    - Fixed export failures when OSM tags differ only by letter case
+    - Fixed Shapefile export failures on large areas
     0.1.0
     - Initial release
+
 category=Vector
-tags=OpenStreetMap,OSM,Overpass,download,import,buildings,roads,POI,GeoPackage,Shapefile
+tags=OpenStreetMap,OSM,Overpass,download,import,buildings,roads,POI,GeoPackage,Shapefile,multilingual,translation
 homepage=https://github.com/martin-runguma/osm-data-toolkit
 tracker=https://github.com/martin-runguma/osm-data-toolkit/issues
 repository=https://github.com/martin-runguma/osm-data-toolkit

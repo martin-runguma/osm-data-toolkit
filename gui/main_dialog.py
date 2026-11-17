@@ -28,16 +28,16 @@ Raw OSM response saving is not offered as a separate output option.
 from __future__ import annotations
 
 import glob
-import html
 import os
 import re
 from datetime import datetime
 from typing import Dict, List, Optional
 
 from qgis.core import QgsApplication, QgsVectorLayer
-from qgis.PyQt.QtCore import Qt, QThread, QUrl
-from qgis.PyQt.QtGui import QDesktopServices, QIcon, QPixmap
+from qgis.PyQt.QtCore import Qt, QThread, QUrl, QSettings
+from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from qgis.PyQt.QtWidgets import (
+    QApplication,
     QButtonGroup,
     QCheckBox,
     QComboBox,
@@ -52,19 +52,16 @@ from qgis.PyQt.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
+    QPlainTextEdit,
     QProgressBar,
     QPushButton,
     QRadioButton,
     QScrollArea,
     QSizePolicy,
     QTextBrowser,
-    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
-
-# Visual theme (colours, fonts, style sheet)
-from . import nhis_theme as theme
 
 # Core modules
 from ..core.aoi import (
@@ -78,6 +75,8 @@ from ..core.aoi import (
 from ..core.aoi_map_tool import RectangleAOIMapTool
 from ..core.overpass import build_overpass_query
 from ..core.osm_download_worker import OverpassDownloadWorker
+from . import theme
+from .. import i18n
 from ..core.osm_exporter import (
     export_overpass_response_to_gpkg,
     export_overpass_response_to_shapefile,
@@ -92,20 +91,13 @@ from ..core.osm_exporter import (
 
 PLUGIN_NAME = "OSM Data Toolkit"
 
-REPOSITORY_URL = "https://github.com/martin-runguma/osm-data-toolkit"
-DOCUMENTATION_URL = REPOSITORY_URL + "#readme"
-ISSUES_URL = REPOSITORY_URL + "/issues"
-
-LOG_COLORS = {
-    "info": "#33485A",
-    "success": "#1B8A4B",
-    "warning": "#B26A00",
-    "error": "#C62828",
-}
-
 PLUGIN_TAGLINE = (
     "Download OpenStreetMap data for any area and load it straight into QGIS."
 )
+
+REPOSITORY_URL = "https://github.com/martin-runguma/osm-data-toolkit"
+DOCUMENTATION_URL = REPOSITORY_URL + "#readme"
+ISSUES_URL = REPOSITORY_URL + "/issues"
 
 OSM_COPYRIGHT_URL = "https://www.openstreetmap.org/copyright"
 
@@ -152,6 +144,87 @@ def _exec_dialog(dialog):
     return run()
 
 
+def _hint(text):
+    """Supporting copy: muted, wrapped and visually quiet."""
+    label = QLabel(text)
+    label.setObjectName("hint")
+    label.setWordWrap(True)
+    return label
+
+
+
+def _translate_widget_tree(root, lang):
+    """Translate a dialog's visible widget properties from their source text."""
+    for widget in [root] + root.findChildren(QWidget):
+
+        # Preserve the original text so language switching does not translate
+        # an already-translated string.
+        if not hasattr(widget, "_osm_original_text"):
+            getter = getattr(widget, "text", None)
+            if callable(getter):
+                try:
+                    widget._osm_original_text = getter()
+                except RuntimeError:
+                    # The underlying Qt object may already have been deleted.
+                    # Continue without caching its original text.
+                    continue
+
+        original = getattr(widget, "_osm_original_text", None)
+        if original is not None and callable(getattr(widget, "setText", None)):
+            widget.setText(i18n.tr(original, lang))
+
+        # Window titles
+        if callable(getattr(widget, "windowTitle", None)):
+            if not hasattr(widget, "_osm_original_window_title"):
+                widget._osm_original_window_title = widget.windowTitle()
+
+            if widget._osm_original_window_title:
+                widget.setWindowTitle(
+                    i18n.tr(widget._osm_original_window_title, lang)
+                )
+
+        # Group-box titles
+        if isinstance(widget, QGroupBox):
+            if not hasattr(widget, "_osm_original_group_title"):
+                widget._osm_original_group_title = widget.title()
+
+            if widget._osm_original_group_title:
+                widget.setTitle(
+                    i18n.tr(widget._osm_original_group_title, lang)
+                )
+
+        # Placeholder text
+        if not hasattr(widget, "_osm_original_placeholder"):
+            getter = getattr(widget, "placeholderText", None)
+            if callable(getter):
+                widget._osm_original_placeholder = getter()
+
+        placeholder = getattr(widget, "_osm_original_placeholder", None)
+        if placeholder and callable(getattr(widget, "setPlaceholderText", None)):
+            widget.setPlaceholderText(i18n.tr(placeholder, lang))
+
+        # Tooltips
+        if not hasattr(widget, "_osm_original_tooltip"):
+            widget._osm_original_tooltip = widget.toolTip()
+
+        if widget._osm_original_tooltip:
+            widget.setToolTip(
+                i18n.tr(widget._osm_original_tooltip, lang)
+            )
+
+        # Combo-box options
+        if isinstance(widget, QComboBox):
+            if not hasattr(widget, "_osm_original_items"):
+                widget._osm_original_items = [
+                    widget.itemText(i) for i in range(widget.count())
+                ]
+
+            for i, value in enumerate(widget._osm_original_items):
+                if i < widget.count():
+                    widget.setItemText(i, i18n.tr(value, lang))
+
+
+
 # ============================================================================
 # OUTPUT NAMING DIALOG
 # ============================================================================
@@ -162,11 +235,15 @@ class OutputNamingDialog(QDialog):
     def __init__(self, output_format: str, parent=None):
         super().__init__(parent)
 
+        # Initialise language before any GUI callbacks can execute.
+        self._language_code = "en"
+
         self.output_format = output_format
-        self.setWindowTitle(f"{PLUGIN_NAME} — Output Naming")
+        self._language_code = i18n.default_language()
+        self.setObjectName("OSMOutputNamingDialog")
+        self.setWindowTitle(f"{PLUGIN_NAME} {i18n.tr('— Output Naming', self._language_code)}")
         self.setModal(True)
-        self.setMinimumWidth(500)
-        self.setStyleSheet(theme.STYLESHEET)
+        self.setMinimumWidth(540)
 
         self.city_edit = QLineEdit()
         self.city_edit.setPlaceholderText("e.g. Nairobi")
@@ -181,47 +258,51 @@ class OutputNamingDialog(QDialog):
         self.aoi_edit.setPlaceholderText("e.g. CBD")
 
         form = QFormLayout()
-        form.addRow("City name:", self.city_edit)
-        form.addRow("Country name:", self.country_edit)
-        form.addRow("Region name:", self.region_edit)
-        form.addRow("AOI name:", self.aoi_edit)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+        form.setHorizontalSpacing(16)
+        form.setVerticalSpacing(10)
+        form.addRow("City name", self.city_edit)
+        form.addRow("Country name", self.country_edit)
+        form.addRow("Region name", self.region_edit)
+        form.addRow("AOI name", self.aoi_edit)
 
         self.preview_label = QLabel()
-        self.preview_label.setWordWrap(True)
         self.preview_label.setObjectName("previewBox")
+        self.preview_label.setWordWrap(True)
+        self.preview_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
 
         self.error_label = QLabel()
-        self.error_label.setWordWrap(True)
         self.error_label.setObjectName("errorText")
+        self.error_label.setWordWrap(True)
 
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok
             | QDialogButtonBox.StandardButton.Cancel
         )
         ok_button = buttons.button(QDialogButtonBox.StandardButton.Ok)
-        ok_button.setText("Continue to Download")
-        ok_button.setProperty("variant", "primary")
-        buttons.button(
-            QDialogButtonBox.StandardButton.Cancel
-        ).setProperty("variant", "ghost")
+        ok_button.setText(i18n.tr("Continue to Download", self._language_code))
+        ok_button.setObjectName("primaryButton")
+        cancel_button = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        cancel_button.setText(i18n.tr("Cancel", self._language_code))
         buttons.accepted.connect(self._accept_if_valid)
         buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setSpacing(12)
 
-        intro = QLabel(
+        intro = _hint(
             "Enter one or more name components. Blank fields will be skipped, "
             "and the remaining names will be joined with underscores. "
             "The selected output format will be retained."
         )
-        intro.setWordWrap(True)
 
         layout.addWidget(intro)
         layout.addLayout(form)
-        preview_caption = QLabel("FILENAME PREVIEW")
-        preview_caption.setObjectName("sectionLabel")
+        preview_caption = QLabel("Filename preview")
+        preview_caption.setObjectName("columnTitle")
         layout.addWidget(preview_caption)
         layout.addWidget(self.preview_label)
 
@@ -229,11 +310,12 @@ class OutputNamingDialog(QDialog):
         # leaves admin_level unrestricted in the Overpass query.
         self.admin_levels_group = QGroupBox("Administrative boundary levels")
         levels_layout = QVBoxLayout(self.admin_levels_group)
-        levels_help = QLabel(
+        levels_layout.setContentsMargins(0, 0, 0, 0)
+        levels_layout.setSpacing(8)
+        levels_help = _hint(
             "Choose all available levels, or select one or more levels "
             "to download (for example, 5–8 or level 5)."
         )
-        levels_help.setWordWrap(True)
         levels_layout.addWidget(levels_help)
 
         self.admin_all_levels_radio = QRadioButton(
@@ -263,10 +345,9 @@ class OutputNamingDialog(QDialog):
         level_buttons.addStretch(1)
         levels_layout.addLayout(level_buttons)
 
-        self.admin_level_status = QLabel(
+        self.admin_level_status = _hint(
             "All administrative levels will be included."
         )
-        self.admin_level_status.setWordWrap(True)
         levels_layout.addWidget(self.admin_level_status)
         layout.addWidget(self.admin_levels_group)
 
@@ -296,6 +377,7 @@ class OutputNamingDialog(QDialog):
         ):
             edit.textChanged.connect(self._update_preview)
 
+        theme.apply_theme(self)
         self._update_preview()
 
     @staticmethod
@@ -320,7 +402,7 @@ class OutputNamingDialog(QDialog):
 
     def _update_preview(self, *_args):
         """Update the filename preview as the user edits the components."""
-        prefix = self.output_prefix() or "Enter_a_name_to_preview"
+        prefix = self.output_prefix() or i18n.tr("Enter_a_name_to_preview", self._language_code)
 
         if self.output_format == "GeoPackage":
             preview = f"{prefix}.gpkg"
@@ -380,11 +462,11 @@ class OutputNamingDialog(QDialog):
         ]
         if not selected:
             self.admin_level_status.setText(
-                "No levels selected. Select at least one level to continue."
+                i18n.tr("No levels selected. Select at least one level to continue.", self._language_code)
             )
         else:
             self.admin_level_status.setText(
-                "Selected administrative levels: "
+                i18n.tr("Selected administrative levels: ", self._language_code)
                 + ", ".join(map(str, selected))
             )
             self.error_label.setText("")
@@ -395,13 +477,13 @@ class OutputNamingDialog(QDialog):
 
         if not prefix:
             self.error_label.setText(
-                "Enter at least one name (City, Country, Region, or AOI)."
+                i18n.tr("Enter at least one name (City, Country, Region, or AOI).", self._language_code)
             )
             return
 
         if len(prefix) > 170:
             self.error_label.setText(
-                "The combined name is too long. Shorten one or more components."
+                i18n.tr("The combined name is too long. Shorten one or more components.", self._language_code)
             )
             return
 
@@ -409,79 +491,55 @@ class OutputNamingDialog(QDialog):
             check.isChecked() for check in self.admin_level_checks.values()
         ):
             self.error_label.setText(
-                "Select at least one administrative level, or choose All levels."
+                i18n.tr("Select at least one administrative level, or choose All levels.", self._language_code)
             )
             return
 
         self.accept()
 
 
-HELP_HTML = """
-<style>
-  h3 { color: #0877AD; margin-top: 14px; margin-bottom: 4px; }
-  li { margin-bottom: 5px; }
-  a  { color: #0A97D9; }
-</style>
-<h3>Quick start</h3>
-<ol>
-  <li><b>Choose an area.</b> Use the current map extent, draw a rectangle
-      on the map, or use the bounding box of selected features or a
-      layer's extent.</li>
-  <li><b>Tick the OSM categories</b> you need (POI, stops, roads,
-      buildings, boundaries, landuse, ...).</li>
-  <li><b>Choose an output format and folder</b>, then click
-      <b>Download OSM Data</b>.</li>
-</ol>
-
-<h3>Good to know</h3>
-<ul>
-  <li><b>GeoPackage is recommended.</b> A Shapefile cannot hold very many
-      attribute columns, so on large areas some rarely used tag columns
-      may be left out (the log tells you when this happens).</li>
-  <li><b>Keep the area focused.</b> Very large areas produce huge Overpass
-      responses and can be slow or rejected by the public servers.</li>
-  <li><b>The cache</b> lets repeat downloads of the same query reuse
-      earlier results.</li>
-  <li><b>"Unclassified OSM elements"</b> in the log is informational: they
-      are mostly untagged vertices of lines and polygons that do not belong
-      to any selected category.</li>
-</ul>
-
-<p>Data &copy; OpenStreetMap contributors, available under the
-<a href="https://www.openstreetmap.org/copyright">Open Database
-Licence</a>.</p>
-<p><i>This plugin is not endorsed by or affiliated with the
-OpenStreetMap Foundation.</i></p>
-"""
+HELP_HTML = '\n<h3>Quick start</h3>\n<ol>\n  <li><b>Choose an area.</b> Use the current map extent, draw a rectangle\n      on the map, or use the bounding box of selected features or a\n      layer\'s extent.</li>\n  <li><b>Tick the OSM categories</b> you need (POI, stops, roads,\n      buildings, boundaries, landuse, ...).</li>\n  <li><b>Choose an output format and folder</b>, then click\n      <b>Download OSM Data</b>.</li>\n</ol>\n\n<h3>Good to know</h3>\n<ul>\n  <li><b>GeoPackage is recommended.</b> A Shapefile cannot hold very many\n      attribute columns, so on large areas some rarely used tag columns\n      may be left out (the log tells you when this happens).</li>\n  <li><b>Keep the area focused.</b> Very large areas produce huge Overpass\n      responses and can be slow or rejected by the public servers.</li>\n  <li><b>The cache</b> lets repeat downloads of the same query reuse\n      earlier results.</li>\n  <li><b>"Unclassified OSM elements"</b> in the log is informational: they\n      are mostly untagged vertices of lines and polygons that do not belong\n      to any selected category.</li>\n</ul>\n\n<p>Data &copy; OpenStreetMap contributors, available under the\n<a href="https://www.openstreetmap.org/copyright">Open Database\nLicence</a>.</p>\n<p><i>This plugin is not endorsed by or affiliated with the\nOpenStreetMap Foundation.</i></p>\n'
 
 
 class HelpDialog(QDialog):
     """Short in-plugin help with links to the full online documentation."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, language="en"):
         super().__init__(parent)
-        self.setWindowTitle(f"{PLUGIN_NAME} — Help")
-        self.resize(560, 520)
-        self.setStyleSheet(theme.STYLESHEET)
+        self._language_code = i18n.normalise(language)
+        self.setObjectName("OSMHelpDialog")
+        self.setWindowTitle(f"{PLUGIN_NAME} {i18n.tr('— Help', self._language_code)}")
+        self.resize(640, 560)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 16)
+        layout.setContentsMargins(20, 18, 20, 16)
         layout.setSpacing(12)
 
         browser = QTextBrowser()
         browser.setOpenExternalLinks(True)
-        browser.setHtml(HELP_HTML)
+        browser.document().setDefaultStyleSheet(
+            "h3 { font-size: 11pt; font-weight: 600; color: #1F2933;"
+            " margin-top: 14px; margin-bottom: 4px; }"
+            "p, li { font-size: 9pt; color: #33414D; }"
+            "a { color: #0B5E8E; }"
+        )
+        version = _plugin_version()
+        if version:
+            browser.setHtml(i18n.tr(HELP_HTML, self._language_code) + f"<p>{i18n.tr('Plugin version', self._language_code)} {version}.</p>")
+        else:
+            browser.setHtml(i18n.tr(HELP_HTML, self._language_code))
         layout.addWidget(browser)
 
         button_row = QHBoxLayout()
+        button_row.setSpacing(8)
 
-        docs_button = QPushButton("Full documentation")
+        docs_button = QPushButton(i18n.tr("Full documentation", self._language_code))
         docs_button.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl(DOCUMENTATION_URL))
         )
         button_row.addWidget(docs_button)
 
-        issues_button = QPushButton("Report an issue")
+        issues_button = QPushButton(i18n.tr("Report an issue", self._language_code))
         issues_button.clicked.connect(
             lambda: QDesktopServices.openUrl(QUrl(ISSUES_URL))
         )
@@ -489,13 +547,14 @@ class HelpDialog(QDialog):
 
         button_row.addStretch(1)
 
-        close_button = QPushButton("Close")
+        close_button = QPushButton(i18n.tr("Close", self._language_code))
+        close_button.setObjectName("primaryButton")
         close_button.clicked.connect(self.accept)
-        close_button.setProperty("variant", "primary")
         close_button.setDefault(True)
         button_row.addWidget(close_button)
 
         layout.addLayout(button_row)
+        theme.apply_theme(self)
 
 
 # ============================================================================
@@ -526,19 +585,26 @@ class OSMDataToolkitDialog(QDialog):
         self._configure_window()
         self._create_widgets()
         self._create_layout()
-        self._apply_stylesheet()
         self._connect_signals()
         self._set_default_values()
+        self._init_language_selector()
 
     # ========================================================================
     # INITIALISATION
     # ========================================================================
 
     def _configure_window(self):
+        self.setObjectName("OSMDataToolkitDialog")
         self.setWindowTitle(PLUGIN_NAME)
         self.setModal(False)
-        self.resize(940, 880)
-        self.setMinimumSize(860, 740)
+        self.setMinimumSize(860, 640)
+        width, height = 1040, 900
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            width = max(860, min(width, available.width() - 80))
+            height = max(640, min(height, available.height() - 80))
+        self.resize(width, height)
 
         plugin_dir = os.path.dirname(
             os.path.dirname(os.path.abspath(__file__))
@@ -547,14 +613,6 @@ class OSMDataToolkitDialog(QDialog):
 
         if os.path.exists(self._icon_path):
             self.setWindowIcon(QIcon(self._icon_path))
-
-    # ========================================================================
-    # STYLING
-    # ========================================================================
-
-    def _apply_stylesheet(self):
-        """Apply the NHIS-inspired theme (see gui/nhis_theme.py)."""
-        self.setStyleSheet(theme.STYLESHEET)
 
     # ========================================================================
     # WIDGET CREATION
@@ -594,7 +652,7 @@ class OSMDataToolkitDialog(QDialog):
         )
 
         self.aoi_info_label = QLabel("AOI: not yet resolved")
-        self.aoi_info_label.setObjectName("infoPanel")
+        self.aoi_info_label.setObjectName("aoiInfo")
         self.aoi_info_label.setWordWrap(True)
         self.aoi_info_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse
@@ -628,17 +686,11 @@ class OSMDataToolkitDialog(QDialog):
             FEATURE_LABELS["open_public_spaces"]
         )
 
-        for checkbox in self._feature_checkboxes().values():
-            checkbox.setProperty("chip", True)
-            checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
-
         self.feature_count_label = QLabel("0 selected")
-        self.feature_count_label.setObjectName("countPill")
+        self.feature_count_label.setObjectName("countText")
 
         self.select_all_button = QPushButton("Select all")
-        self.select_all_button.setProperty("variant", "link")
         self.clear_all_button = QPushButton("Clear all")
-        self.clear_all_button.setProperty("variant", "link")
 
         # --- Output settings ------------------------------------------------
         self.output_format_combo = QComboBox()
@@ -648,7 +700,7 @@ class OSMDataToolkitDialog(QDialog):
         self.output_directory_edit.setPlaceholderText(
             "Select output directory..."
         )
-        self.output_directory_button = QPushButton("Browse...")
+        self.output_directory_button = QPushButton("Browse…")
 
         # --- Processing options --------------------------------------------
         self.auto_add_layers_check = QCheckBox(
@@ -667,120 +719,61 @@ class OSMDataToolkitDialog(QDialog):
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setRange(0, 100)
-        self.progress_bar.setValue(0)
         self.progress_bar.setTextVisible(False)
+        self.progress_bar.setValue(0)
 
-        self.log_output = QTextEdit()
+        self.log_output = QPlainTextEdit()
         self.log_output.setReadOnly(True)
         self.log_output.setPlaceholderText(
             "Processing messages will appear here..."
         )
-        self.log_output.setMinimumHeight(110)
+        self.log_output.setMinimumHeight(72)
+        self.log_output.setMaximumHeight(96)
         self.log_output.setSizePolicy(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Expanding,
         )
 
         self.clear_log_button = QPushButton("Clear log")
-        self.clear_log_button.setProperty("variant", "link")
+        self.clear_log_button.setObjectName("ghostButton")
         self.clear_log_button.setToolTip(
             "Clear the messages currently shown in the Processing Log."
         )
 
         # --- Main action buttons -------------------------------------------
         self.help_button = QPushButton("Help")
-        self.help_button.setObjectName("help_button")
+        self.help_button.setObjectName("ghostButton")
 
         self.download_button = QPushButton("Download OSM Data")
-        self.download_button.setObjectName("download_button")
-        self.download_button.setProperty("variant", "primary")
+        self.download_button.setObjectName("primaryButton")
         self.download_button.setDefault(True)
 
         self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.setObjectName("cancel_button")
-        self.cancel_button.setProperty("variant", "danger")
+        self.cancel_button.setObjectName("dangerButton")
         self.cancel_button.setEnabled(False)
 
         self.close_button = QPushButton("Close")
-        self.close_button.setObjectName("close_button")
-        self.close_button.setProperty("variant", "ghost")
+        self.close_button.setObjectName("ghostButton")
 
     # ========================================================================
     # LAYOUT
     # ========================================================================
 
-    def _make_card(self, number, title, hint=""):
-        """
-        Build a white "card" with a numbered header.
-
-        Returns ``(card, header_layout, body_layout)``. Callers add their
-        content to ``body_layout`` and may add extra widgets (for example a
-        counter) to the right-hand side of ``header_layout``.
-        """
-        card = QFrame()
-        card.setObjectName("card")
-
-        outer = QVBoxLayout(card)
-        outer.setContentsMargins(18, 16, 18, 18)
-        outer.setSpacing(12)
-
-        header = QHBoxLayout()
-        header.setSpacing(12)
-
-        if number is not None:
-            badge = QLabel(str(number))
-            badge.setObjectName("stepBadge")
-            badge.setFixedSize(28, 28)
-            badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            header.addWidget(badge, 0, Qt.AlignmentFlag.AlignVCenter)
-
-        text_column = QVBoxLayout()
-        text_column.setSpacing(1)
-        title_label = QLabel(title)
-        title_label.setObjectName("cardTitle")
-        text_column.addWidget(title_label)
-        if hint:
-            hint_label = QLabel(hint)
-            hint_label.setObjectName("cardHint")
-            hint_label.setWordWrap(True)
-            text_column.addWidget(hint_label)
-        header.addLayout(text_column, 1)
-
-        outer.addLayout(header)
-
-        divider = QFrame()
-        divider.setObjectName("divider")
-        divider.setFixedHeight(1)
-        outer.addWidget(divider)
-
-        body = QVBoxLayout()
-        body.setSpacing(10)
-        outer.addLayout(body)
-
-        return card, header, body
-
-    def _make_option_row(self, radio, button):
-        """One selectable AOI method: radio button on the left, action right."""
-        row = QFrame()
-        row.setObjectName("optionRow")
-        row.setProperty("active", False)
-
-        layout = QHBoxLayout(row)
-        layout.setContentsMargins(14, 8, 8, 8)
-        layout.addWidget(radio)
-        layout.addStretch()
-        layout.addWidget(button)
-
-        self._aoi_rows.append((radio, row))
-        return row
+    def _make_group(self, title):
+        """Create one section panel and return it with its body layout."""
+        group = QGroupBox(title)
+        body = QVBoxLayout(group)
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(8)
+        return group, body
 
     def _make_feature_column(self, title, checkboxes):
-        """A labelled column of category chips."""
+        """A labelled column of feature checkboxes."""
         column = QVBoxLayout()
-        column.setSpacing(6)
+        column.setSpacing(8)
 
-        label = QLabel(title.upper())
-        label.setObjectName("sectionLabel")
+        label = QLabel(title)
+        label.setObjectName("columnTitle")
         column.addWidget(label)
 
         for checkbox in checkboxes:
@@ -788,122 +781,134 @@ class OSMDataToolkitDialog(QDialog):
         column.addStretch()
         return column
 
-    def _make_header_banner(self):
-        """Brand banner shown at the top of the window."""
+    def _build_header(self):
+        """Compact product header above the scrollable workflow."""
         header = QFrame()
-        header.setObjectName("header")
+        header.setObjectName("appHeader")
+        row = QHBoxLayout(header)
+        row.setContentsMargins(24, 12, 24, 12)
+        row.setSpacing(12)
 
-        layout = QHBoxLayout(header)
-        layout.setContentsMargins(24, 16, 24, 16)
-        layout.setSpacing(14)
-
-        logo = QLabel()
-        logo.setObjectName("logoTile")
-        logo.setFixedSize(52, 52)
-        logo.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        mark = QLabel()
         if os.path.exists(self._icon_path):
-            pixmap = QPixmap(self._icon_path)
-            if not pixmap.isNull():
-                logo.setPixmap(
-                    pixmap.scaled(
-                        38,
-                        38,
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation,
-                    )
-                )
-        layout.addWidget(logo)
+            mark.setPixmap(QIcon(self._icon_path).pixmap(28, 28))
+        row.addWidget(mark, 0, Qt.AlignmentFlag.AlignVCenter)
 
         text_column = QVBoxLayout()
-        text_column.setSpacing(2)
-
-        title_row = QHBoxLayout()
-        title_row.setSpacing(10)
+        text_column.setSpacing(1)
         title = QLabel(PLUGIN_NAME)
-        title.setObjectName("headerTitle")
-        title_row.addWidget(title)
-
-        version = _plugin_version()
-        if version:
-            pill = QLabel(f"v{version}")
-            pill.setObjectName("headerPill")
-            title_row.addWidget(pill)
-        title_row.addStretch()
-        text_column.addLayout(title_row)
-
+        title.setObjectName("appTitle")
         subtitle = QLabel(PLUGIN_TAGLINE)
-        subtitle.setObjectName("headerSubtitle")
+        subtitle.setObjectName("appSubtitle")
+        text_column.addWidget(title)
         text_column.addWidget(subtitle)
+        row.addLayout(text_column, 1)
 
-        layout.addLayout(text_column, 1)
-        layout.addWidget(self.help_button)
+        self.language_label = QLabel("Language:")
+        self.language_combo = QComboBox()
+        for code, name in i18n.LANGUAGES:
+            self.language_combo.addItem(name, code)
+        self.language_combo.currentIndexChanged.connect(self._on_language_changed)
+        row.addWidget(self.language_label, 0, Qt.AlignmentFlag.AlignVCenter)
+        row.addWidget(self.language_combo, 0, Qt.AlignmentFlag.AlignVCenter)
         return header
 
-    def _create_layout(self):
-        self._aoi_rows = []
+    def _init_language_selector(self):
+        """Load the saved interface language and translate visible UI strings."""
+        settings = QSettings()
+        saved = settings.value("OSMDataToolkit/language", "en", type=str)
+        code = i18n.normalise(saved)
+        index = self.language_combo.findData(code)
+        self.language_combo.blockSignals(True)
+        self.language_combo.setCurrentIndex(max(0, index))
+        self.language_combo.blockSignals(False)
+        self._language_code = code
+        self._translate_widgets()
 
+    def _on_language_changed(self, index):
+        code = self.language_combo.itemData(index)
+        if not code:
+            return
+        self._language_code = code
+        QSettings().setValue("OSMDataToolkit/language", code)
+        self._translate_widgets()
+
+    '''
+    def _translate_widgets(self):
+        """Translate widget labels, titles, placeholders, tooltips and options."""
+        lang = getattr(self, "_language_code", "en")
+        _translate_widget_tree(self, lang)
+        rtl = lang in ("ar", "ur", "fa")
+        self.setLayoutDirection(
+            Qt.LayoutDirection.RightToLeft if rtl
+            else Qt.LayoutDirection.LeftToRight
+        )
+        self.language_label.setText(i18n.tr("Language:", lang))
+        '''
+
+    def _translate_widgets(self):
+        """Translate widget labels, titles, placeholders, tooltips and options."""
+        lang = getattr(self, "_language_code", "en")
+
+        _translate_widget_tree(self, lang)
+
+        # Explicitly refresh Output Settings form labels.
+        self.output_format_label.setText(
+            i18n.tr("Output format", lang)
+        )
+
+        self.output_directory_label.setText(
+            i18n.tr("Output directory", lang)
+        )
+
+        rtl = lang in ("ar", "ur", "fa")
+        self.setLayoutDirection(
+            Qt.LayoutDirection.RightToLeft if rtl
+            else Qt.LayoutDirection.LeftToRight
+        )
+
+        self.language_label.setText(i18n.tr("Language:", lang))
+
+    def _create_layout(self):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-
-        # --- Header banner -------------------------------------------------
-        main_layout.addWidget(self._make_header_banner())
+        main_layout.addWidget(self._build_header())
 
         # --- Scrollable workflow area --------------------------------------
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
-        content_widget = QWidget()
-        content_widget.setObjectName("scrollContent")
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 18, 20, 12)
-        content_layout.setSpacing(14)
+        page = QWidget()
+        page.setObjectName("page")
+        content_layout = QVBoxLayout(page)
+        content_layout.setContentsMargins(24, 10, 24, 8)
+        content_layout.setSpacing(8)
 
-        # --- 1. Area of Interest -------------------------------------------
-        aoi_card, _aoi_header, aoi_body = self._make_card(
-            1,
-            "Area of Interest",
-            "Choose how the download area is defined.",
+        # --- Area of Interest ----------------------------------------------
+        aoi_group, aoi_layout = self._make_group("Area of Interest")
+        aoi_grid = QGridLayout()
+        aoi_grid.setColumnStretch(0, 1)
+        aoi_methods = (
+            (self.current_extent_radio, self.update_current_extent_button),
+            (self.draw_rectangle_radio, self.draw_aoi_button),
+            (self.selected_feature_radio, self.selected_features_button),
+            (self.layer_extent_radio, self.layer_extent_button),
         )
-        aoi_body.setSpacing(8)
-        aoi_body.addWidget(
-            self._make_option_row(
-                self.current_extent_radio, self.update_current_extent_button
-            )
-        )
-        aoi_body.addWidget(
-            self._make_option_row(
-                self.draw_rectangle_radio, self.draw_aoi_button
-            )
-        )
-        aoi_body.addWidget(
-            self._make_option_row(
-                self.selected_feature_radio, self.selected_features_button
-            )
-        )
-        aoi_body.addWidget(
-            self._make_option_row(
-                self.layer_extent_radio, self.layer_extent_button
-            )
-        )
-        aoi_body.addSpacing(2)
-        aoi_body.addWidget(self.aoi_info_label)
-        content_layout.addWidget(aoi_card)
+        for row, (radio, button) in enumerate(aoi_methods):
+            aoi_grid.addWidget(radio, row, 0)
+            aoi_grid.addWidget(button, row, 1, Qt.AlignmentFlag.AlignRight)
+        aoi_layout.addLayout(aoi_grid)
+        aoi_layout.addWidget(self.aoi_info_label)
+        content_layout.addWidget(aoi_group)
 
-        # --- 2. OSM Feature Categories -------------------------------------
-        feature_card, feature_header, feature_body = self._make_card(
-            2,
-            "OSM Feature Categories",
-            "Each category is exported as separate point, line and "
-            "polygon layers.",
-        )
-        feature_header.addWidget(
-            self.feature_count_label, 0, Qt.AlignmentFlag.AlignVCenter
+        # --- OSM Feature Categories ----------------------------------------
+        feature_group, feature_layout = self._make_group(
+            "OSM Feature Categories"
         )
 
         feature_columns_layout = QHBoxLayout()
-        feature_columns_layout.setSpacing(16)
+        feature_columns_layout.setSpacing(24)
         feature_columns_layout.addLayout(
             self._make_feature_column(
                 "Public transport & places",
@@ -939,86 +944,95 @@ class OSMDataToolkitDialog(QDialog):
             ),
             1,
         )
-        feature_body.addLayout(feature_columns_layout)
+        feature_layout.addLayout(feature_columns_layout)
 
         feature_buttons = QHBoxLayout()
-        feature_buttons.setSpacing(4)
+        feature_buttons.addWidget(self.feature_count_label)
+        feature_buttons.addStretch()
         feature_buttons.addWidget(self.select_all_button)
         feature_buttons.addWidget(self.clear_all_button)
-        feature_buttons.addStretch()
-        feature_body.addLayout(feature_buttons)
-        content_layout.addWidget(feature_card)
+        feature_layout.addLayout(feature_buttons)
+        content_layout.addWidget(feature_group)
 
-        # --- 3. Output Settings and 4. Processing Options (side by side) ---
+        # --- Output Settings and Processing Options ------------------------
         lower_row = QHBoxLayout()
-        lower_row.setSpacing(14)
+        lower_row.setSpacing(8)
 
-        output_card, _output_header, output_body = self._make_card(
-            3, "Output Settings", "Where and how results are saved."
+        output_group, output_layout = self._make_group("Output Settings")
+        output_form = QFormLayout()
+        output_form.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
         )
-        output_grid = QGridLayout()
-        output_grid.setHorizontalSpacing(10)
-        output_grid.setVerticalSpacing(8)
-
-        format_label = QLabel("Output format")
-        format_label.setObjectName("fieldLabel")
-        output_grid.addWidget(format_label, 0, 0, 1, 2)
-        output_grid.addWidget(self.output_format_combo, 1, 0, 1, 2)
-
-        directory_label = QLabel("Output directory")
-        directory_label.setObjectName("fieldLabel")
-        output_grid.addWidget(directory_label, 2, 0, 1, 2)
-        output_grid.addWidget(self.output_directory_edit, 3, 0)
-        output_grid.addWidget(self.output_directory_button, 3, 1)
-        output_grid.setColumnStretch(0, 1)
-        output_body.addLayout(output_grid)
-        output_body.addStretch()
-
-        options_card, _options_header, options_body = self._make_card(
-            4, "Processing Options", "Fine-tune how data is fetched."
+        output_form.setHorizontalSpacing(16)
+        output_form.setVerticalSpacing(10)
+        #output_form.addRow("Output format", self.output_format_combo)
+        self.output_format_label = QLabel("Output format")
+        output_form.addRow(
+            self.output_format_label,
+            self.output_format_combo
         )
-        options_body.addWidget(self.auto_add_layers_check)
-        options_body.addWidget(self.cache_check)
-        options_body.addStretch()
 
-        lower_row.addWidget(output_card, 3)
-        lower_row.addWidget(options_card, 2)
+        directory_row = QHBoxLayout()
+        directory_row.setSpacing(8)
+        directory_row.addWidget(self.output_directory_edit, 1)
+        directory_row.addWidget(self.output_directory_button)
+        #output_form.addRow("Output directory", directory_row)
+        self.output_directory_label = QLabel("Output directory")
+        output_form.addRow(
+            self.output_directory_label,
+            directory_row
+        )
+        output_layout.addLayout(output_form)
+        output_layout.addStretch()
+
+        options_group, options_layout = self._make_group("Processing Options")
+        options_layout.addWidget(self.auto_add_layers_check)
+        options_layout.addWidget(self.cache_check)
+        options_layout.addStretch()
+
+        lower_row.addWidget(output_group, 3)
+        lower_row.addWidget(options_group, 2)
         content_layout.addLayout(lower_row)
 
         content_layout.addStretch()
 
-        scroll_area.setWidget(content_widget)
-        main_layout.addWidget(scroll_area, 3)
+        scroll_area.setWidget(page)
+        main_layout.addWidget(scroll_area, 1)
 
-        # --- Progress card: status, progress bar and processing log --------
-        progress_wrapper = QWidget()
-        progress_wrapper.setObjectName("scrollContent")
-        wrapper_layout = QVBoxLayout(progress_wrapper)
-        wrapper_layout.setContentsMargins(20, 0, 20, 14)
+        # --- Persistent progress and log panel ------------------------------
+        status_panel = QFrame()
+        status_panel.setObjectName("statusPanel")
+        status_layout = QVBoxLayout(status_panel)
+        status_layout.setContentsMargins(24, 10, 24, 12)
+        status_layout.setSpacing(6)
 
-        progress_card, progress_header, progress_body = self._make_card(
-            None, "Progress & Log"
-        )
-        progress_header.addWidget(
-            self.clear_log_button, 0, Qt.AlignmentFlag.AlignVCenter
-        )
-        progress_body.setSpacing(8)
-        progress_body.addWidget(self.status_label)
-        progress_body.addWidget(self.progress_bar)
-        progress_body.addWidget(self.log_output, 1)
-        wrapper_layout.addWidget(progress_card, 1)
-        main_layout.addWidget(progress_wrapper, 2)
+        header_row = QHBoxLayout()
+        header_row.setSpacing(10)
+        panel_title = QLabel("Processing log")
+        panel_title.setObjectName("panelTitle")
+        self.progress_percent = QLabel("0%")
+        self.progress_percent.setObjectName("percentText")
+        header_row.addWidget(panel_title)
+        header_row.addStretch(1)
+        header_row.addWidget(self.progress_percent)
+        header_row.addWidget(self.clear_log_button)
+
+        status_layout.addLayout(header_row)
+        status_layout.addWidget(self.status_label)
+        status_layout.addWidget(self.progress_bar)
+        status_layout.addWidget(self.log_output)
+        main_layout.addWidget(status_panel)
 
         # --- Footer: attribution and main actions --------------------------
         footer = QFrame()
         footer.setObjectName("footer")
         footer_layout = QHBoxLayout(footer)
-        footer_layout.setContentsMargins(24, 12, 24, 12)
+        footer_layout.setContentsMargins(24, 10, 24, 10)
         footer_layout.setSpacing(8)
 
         note = QLabel(
             "Data \u00a9 <a href=\"" + OSM_COPYRIGHT_URL + "\" "
-            "style=\"color:#0877AD; text-decoration:none;\">"
+            "style=\"color:#0B5E8E; text-decoration:none;\">"
             "OpenStreetMap contributors</a> (ODbL)"
         )
         note.setObjectName("footerNote")
@@ -1026,16 +1040,20 @@ class OSMDataToolkitDialog(QDialog):
         note.setOpenExternalLinks(True)
         footer_layout.addWidget(note)
         footer_layout.addStretch()
+        footer_layout.addWidget(self.help_button)
         footer_layout.addWidget(self.close_button)
         footer_layout.addWidget(self.cancel_button)
         footer_layout.addWidget(self.download_button)
         main_layout.addWidget(footer)
+
+        theme.apply_theme(self)
 
     # ========================================================================
     # SIGNALS
     # ========================================================================
 
     def _connect_signals(self):
+        self.progress_bar.valueChanged.connect(self._on_progress_changed)
         self.select_all_button.clicked.connect(self._select_all_features)
         self.clear_all_button.clicked.connect(self._clear_all_features)
 
@@ -1069,7 +1087,6 @@ class OSMDataToolkitDialog(QDialog):
             self.layer_extent_radio,
         ):
             radio.toggled.connect(self._on_aoi_method_changed)
-            radio.toggled.connect(self._refresh_aoi_rows)
 
         for checkbox in self._feature_checkboxes().values():
             checkbox.toggled.connect(self._update_feature_count)
@@ -1083,7 +1100,6 @@ class OSMDataToolkitDialog(QDialog):
 
         # Initial AOI method.
         self.current_extent_radio.setChecked(True)
-        self._refresh_aoi_rows()
 
         # Default feature selections.
         for feature_name in ("buildings", "roads"):
@@ -1106,16 +1122,8 @@ class OSMDataToolkitDialog(QDialog):
     # FEATURE SELECTION
     # ========================================================================
 
-    def _refresh_aoi_rows(self, *_args):
-        """Highlight the option row of the selected AOI method."""
-        for radio, row in self._aoi_rows:
-            active = radio.isChecked()
-            if row.property("active") != active:
-                row.setProperty("active", active)
-                theme.repolish(row)
-
     def _update_feature_count(self, *_args):
-        """Update the "N selected" pill next to the category heading."""
+        """Update the "N selected" count next to the category heading."""
         total = len(self._feature_checkboxes())
         chosen = len(self.get_selected_features())
         self.feature_count_label.setText(f"{chosen} of {total} selected")
@@ -1313,7 +1321,7 @@ class OSMDataToolkitDialog(QDialog):
             self._log_error(
                 "Cannot draw AOI because the QGIS interface is unavailable."
             )
-            self.status_label.setText("QGIS map canvas is unavailable.")
+            self._set_status(i18n.tr("QGIS map canvas is unavailable.", self._language_code))
             return
 
         if not self.draw_rectangle_radio.isChecked():
@@ -1339,7 +1347,7 @@ class OSMDataToolkitDialog(QDialog):
 
             canvas.setMapTool(self.rectangle_map_tool)
 
-            self.status_label.setText(
+            self._set_status(
                 "Draw the AOI rectangle on the QGIS map."
             )
             self.aoi_info_label.setText(
@@ -1351,7 +1359,7 @@ class OSMDataToolkitDialog(QDialog):
             self.rectangle_map_tool = None
             self.previous_map_tool = None
             self._log_error(f"Failed to activate rectangle AOI tool: {exc}")
-            self.status_label.setText(f"Unable to start AOI drawing: {exc}")
+            self._set_status(f"Unable to start AOI drawing: {exc}")
 
     def _on_rectangle_drawn(self, geometry):
         """Convert the drawn rectangle into the standard AOI object."""
@@ -1371,14 +1379,14 @@ class OSMDataToolkitDialog(QDialog):
             self.aoi = aoi
             self._show_aoi("Drawn rectangle", aoi)
 
-            self.status_label.setText("AOI rectangle captured successfully.")
+            self._set_status(i18n.tr("AOI rectangle captured successfully.", self._language_code))
             self._log_success("Drawn rectangle AOI captured successfully.")
             self._log(aoi.description())
 
         except Exception as exc:
             self.aoi = None
             self.aoi_info_label.setText(f"AOI: unable to create\n{exc}")
-            self.status_label.setText("Failed to create AOI.")
+            self._set_status(i18n.tr("Failed to create AOI.", self._language_code))
             self._log_error(f"Failed to process drawn rectangle AOI: {exc}")
 
         finally:
@@ -1400,7 +1408,7 @@ class OSMDataToolkitDialog(QDialog):
             # so there is nothing left to clear.
             tool = None
 
-        self.status_label.setText("AOI drawing cancelled.")
+        self._set_status(i18n.tr("AOI drawing cancelled.", self._language_code))
 
         if self.aoi is None and self.get_area_method() == "draw_rectangle":
             self.aoi_info_label.setText(
@@ -1475,7 +1483,7 @@ class OSMDataToolkitDialog(QDialog):
                 self.aoi_info_label.setText(
                     "AOI: the active layer is not a vector layer."
                 )
-                self.status_label.setText(
+                self._set_status(
                     "Select a vector layer with selected features."
                 )
                 self._log_warning(
@@ -1489,7 +1497,7 @@ class OSMDataToolkitDialog(QDialog):
                 self.aoi_info_label.setText(
                     "AOI: no feature(s) selected in the active layer."
                 )
-                self.status_label.setText(
+                self._set_status(
                     "Select one or more features in the active layer."
                 )
                 self._log_warning("No selected features found.")
@@ -1501,7 +1509,7 @@ class OSMDataToolkitDialog(QDialog):
             if not is_valid:
                 self.aoi = None
                 self.aoi_info_label.setText(f"AOI: invalid\n{message}")
-                self.status_label.setText(
+                self._set_status(
                     "Selected-feature AOI is invalid."
                 )
                 self._log_error(
@@ -1512,7 +1520,7 @@ class OSMDataToolkitDialog(QDialog):
             self.aoi = aoi
             self._show_aoi(f"Selected features ({selected_count})", aoi)
 
-            self.status_label.setText(
+            self._set_status(
                 f"Selected-feature AOI captured successfully "
                 f"({selected_count} feature(s))."
             )
@@ -1524,7 +1532,7 @@ class OSMDataToolkitDialog(QDialog):
             self.aoi_info_label.setText(
                 f"AOI: failed to resolve selected features\n{exc}"
             )
-            self.status_label.setText(
+            self._set_status(
                 "Failed to resolve selected-feature AOI."
             )
             self._log_error(
@@ -1556,7 +1564,7 @@ class OSMDataToolkitDialog(QDialog):
             if layer is None:
                 self.aoi = None
                 self.aoi_info_label.setText("AOI: no active QGIS layer.")
-                self.status_label.setText("Select an active QGIS layer.")
+                self._set_status(i18n.tr("Select an active QGIS layer.", self._language_code))
                 self._log_warning("No active QGIS layer is available.")
                 return
 
@@ -1566,7 +1574,7 @@ class OSMDataToolkitDialog(QDialog):
             if not is_valid:
                 self.aoi = None
                 self.aoi_info_label.setText(f"AOI: invalid\n{message}")
-                self.status_label.setText(
+                self._set_status(
                     "Active-layer extent AOI is invalid."
                 )
                 self._log_error(
@@ -1577,7 +1585,7 @@ class OSMDataToolkitDialog(QDialog):
             self.aoi = aoi
             self._show_aoi("Active layer extent", aoi)
 
-            self.status_label.setText(
+            self._set_status(
                 "Active-layer extent captured successfully."
             )
             self._log_success("Active-layer extent captured successfully.")
@@ -1588,7 +1596,7 @@ class OSMDataToolkitDialog(QDialog):
             self.aoi_info_label.setText(
                 f"AOI: failed to resolve active layer extent\n{exc}"
             )
-            self.status_label.setText(
+            self._set_status(
                 "Failed to resolve active-layer extent."
             )
             self._log_error(
@@ -1602,7 +1610,7 @@ class OSMDataToolkitDialog(QDialog):
     def _browse_output_directory(self):
         directory = QFileDialog.getExistingDirectory(
             self,
-            "Select Output Directory",
+            i18n.tr("Select Output Directory", self._language_code),
         )
 
         if directory:
@@ -1685,9 +1693,10 @@ class OSMDataToolkitDialog(QDialog):
         # Get and validate the filename before making the network request.
         output_format = self.output_format_combo.currentText()
         naming_dialog = OutputNamingDialog(output_format, self)
+        _translate_widget_tree(naming_dialog, self._language_code)
 
         if _exec_dialog(naming_dialog) != QDialog.DialogCode.Accepted:
-            self.status_label.setText("Download cancelled before it started.")
+            self._set_status(i18n.tr("Download cancelled before it started.", self._language_code))
             self._log_warning(
                 "Download cancelled in the output-naming dialog."
             )
@@ -1717,9 +1726,7 @@ class OSMDataToolkitDialog(QDialog):
         # There is deliberately no raw JSON output or raw JSON overwrite check.
 
         if existing_outputs:
-            answer = QMessageBox.question(
-                self,
-                f"{PLUGIN_NAME} — Confirm Overwrite",
+            overwrite_message = i18n.translate_dynamic(
                 "One or more output files with this name already exist. "
                 "Do you want to overwrite the matching output files?\n\n"
                 + "\n".join(
@@ -1727,12 +1734,18 @@ class OSMDataToolkitDialog(QDialog):
                     for path in existing_outputs[:8]
                 )
                 + ("\n…" if len(existing_outputs) > 8 else ""),
+                self._language_code,
+            )
+            answer = QMessageBox.question(
+                self,
+                f"{PLUGIN_NAME} {i18n.tr('— Confirm Overwrite', self._language_code)}",
+                overwrite_message,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No,
             )
 
             if answer != QMessageBox.StandardButton.Yes:
-                self.status_label.setText(
+                self._set_status(
                     "Download cancelled; existing files preserved."
                 )
                 self._log_warning(
@@ -1768,7 +1781,7 @@ class OSMDataToolkitDialog(QDialog):
 
         self._download_cancel_requested = False
         self.progress_bar.setRange(0, 0)
-        self.status_label.setText("Preparing Overpass download...")
+        self._set_status(i18n.tr("Preparing Overpass download...", self._language_code))
 
         self._log("Preparing Overpass query.")
         self._log(
@@ -1820,17 +1833,23 @@ class OSMDataToolkitDialog(QDialog):
         self._download_worker = worker
 
         self._set_busy(True)
-        self.status_label.setText("Downloading OSM data from Overpass...")
+        self._set_status(i18n.tr("Downloading OSM data from Overpass...", self._language_code))
         self._log("Background Overpass download started.")
 
         thread.start()
 
     def _on_download_started(self):
-        self.status_label.setText("Overpass download running...")
+        self._set_status(i18n.tr("Overpass download running...", self._language_code))
+
+    def _set_status(self, message):
+        """Set the status label after translating plugin-generated messages."""
+        self.status_label.setText(
+            i18n.translate_dynamic(message, getattr(self, "_language_code", "en"))
+        )
 
     def _on_download_status(self, message: str):
         self._log(message)
-        self.status_label.setText(message)
+        self._set_status(i18n.translate_dynamic(message, self._language_code))
 
     # ========================================================================
     # DOWNLOAD - SUCCESS AND EXPORT
@@ -1867,7 +1886,7 @@ class OSMDataToolkitDialog(QDialog):
 
         if not output_prefix:
             self.progress_bar.setValue(0)
-            self.status_label.setText(
+            self._set_status(
                 "Export cancelled: output name is missing."
             )
             self._log_error(
@@ -1889,7 +1908,7 @@ class OSMDataToolkitDialog(QDialog):
                     f"{output_prefix}.gpkg",
                 )
 
-                self.status_label.setText(
+                self._set_status(
                     "Converting OSM response to GeoPackage..."
                 )
                 self._log(
@@ -1918,7 +1937,7 @@ class OSMDataToolkitDialog(QDialog):
                     )
 
             elif output_format == "Shapefile":
-                self.status_label.setText(
+                self._set_status(
                     "Converting OSM response to Shapefiles..."
                 )
                 self._log(
@@ -1990,7 +2009,7 @@ class OSMDataToolkitDialog(QDialog):
 
             # Mark the export as successful before attempting cleanup.
             self.progress_bar.setValue(100)
-            self.status_label.setText(
+            self._set_status(
                 f"Export complete: "
                 f"{export_result['total_features']:,} features written."
             )
@@ -2003,16 +2022,19 @@ class OSMDataToolkitDialog(QDialog):
 
         except Exception as exc:
             self.progress_bar.setValue(0)
-            self.status_label.setText(
+            self._set_status(
                 "Download succeeded, but export failed."
             )
             self._log_error(f"{output_format} export failed: {exc}")
 
             QMessageBox.critical(
                 self,
-                f"{PLUGIN_NAME} — Export Error",
-                "The OSM download succeeded, but the output could not be created."
-                f"\n\nDetails: {exc}",
+                f"{PLUGIN_NAME} " + i18n.tr("— Export Error", self._language_code),
+                i18n.translate_dynamic(
+                    "The OSM download succeeded, but the output could not be created."
+                    f"\n\nDetails: {exc}",
+                    self._language_code,
+                ),
             )
 
     # ========================================================================
@@ -2101,13 +2123,13 @@ class OSMDataToolkitDialog(QDialog):
     def _on_download_error(self, message: str):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.status_label.setText("Overpass download failed.")
+        self._set_status(i18n.tr("Overpass download failed.", self._language_code))
         self._log_error(f"Overpass download failed: {message}")
 
     def _on_download_cancelled(self):
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.status_label.setText("Download cancelled.")
+        self._set_status(i18n.tr("Download cancelled.", self._language_code))
         self._log_warning("Overpass download cancelled.")
 
     def _cancel_download(self):
@@ -2126,7 +2148,7 @@ class OSMDataToolkitDialog(QDialog):
         worker.request_cancel()
         self.cancel_button.setEnabled(False)
 
-        self.status_label.setText(
+        self._set_status(
             "Cancellation requested; waiting for the current request to finish..."
         )
         self._log_warning(
@@ -2152,7 +2174,7 @@ class OSMDataToolkitDialog(QDialog):
             self.progress_bar.setValue(0)
 
         if self.status_label.text().startswith("Cancellation requested"):
-            self.status_label.setText("Download stopped.")
+            self._set_status(i18n.tr("Download stopped.", self._language_code))
 
         if thread is not None:
             thread.deleteLater()
@@ -2197,34 +2219,38 @@ class OSMDataToolkitDialog(QDialog):
 
     def _show_help(self):
         """Open the in-plugin help with links to the online documentation."""
-        _exec_dialog(HelpDialog(self))
+        _exec_dialog(HelpDialog(self, self._language_code))
 
     # ========================================================================
     # LOGGING AND MESSAGES
     # ========================================================================
 
+    def _on_progress_changed(self, value):
+        """Keep the numeric readout in step with the progress bar."""
+        self.progress_percent.setText("{}%".format(int(value)))
+
     def _clear_processing_log(self):
         """Clear only the visible log, without changing processing settings."""
         self.log_output.clear()
 
-    def _log(self, message: str, level: str = "info"):
-        """Append a timestamped message using the requested log colour."""
-        color = LOG_COLORS.get(level, LOG_COLORS["info"])
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        safe_text = html.escape(f"[{timestamp}] {message}")
+    #def _log(self, message: str, level: str = "info"):
+    #    """Append a timestamped message to the processing log."""
+    #    timestamp = datetime.now().strftime("%H:%M:%S")
+    #    self.log_output.appendPlainText(f"[{timestamp}] {i18n.translate_dynamic(message, self._language_code)}")
 
-        self.log_output.append(
-            f'<span style="color:{color};">{safe_text}</span>'
+    def _log(self, message: str, level: str = "info"):
+        """Append a timestamped, translated message to the processing log."""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+
+        language = getattr(self, "_language_code", "en")
+
+        translated_message = i18n.translate_dynamic(
+            str(message),
+            language
         )
 
-    def _log_feature_count(self, message: str):
-        """Append an exported feature count in bold green text."""
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        safe_text = html.escape(f"[{timestamp}] {message}")
-
-        self.log_output.append(
-            f'<span style="color:{LOG_COLORS["success"]}; font-weight:600;">'
-            f"{safe_text}</span>"
+        self.log_output.appendPlainText(
+            f"[{timestamp}] {translated_message}"
         )
 
     def _log_success(self, message: str):
@@ -2236,9 +2262,13 @@ class OSMDataToolkitDialog(QDialog):
     def _log_error(self, message: str):
         self._log(message, "error")
 
+    def _log_feature_count(self, message: str):
+        """Log the number of exported features."""
+        self._log(message)
+
     def _show_error(self, message: str):
-        self._log_error("ERROR: " + str(message))
-        QMessageBox.warning(self, PLUGIN_NAME, str(message))
+        self._log_error(i18n.tr("ERROR:", self._language_code) + " " + i18n.translate_dynamic(str(message), self._language_code))
+        QMessageBox.warning(self, PLUGIN_NAME, i18n.translate_dynamic(str(message), self._language_code))
 
     # ========================================================================
     # WINDOW EVENTS AND RESET
@@ -2269,7 +2299,7 @@ class OSMDataToolkitDialog(QDialog):
 
         self.progress_bar.setRange(0, 100)
         self.progress_bar.setValue(0)
-        self.status_label.setText("Ready.")
+        self._set_status(i18n.tr("Ready.", self._language_code))
 
         self._pending_output_prefix = ""
         self.log_output.clear()
